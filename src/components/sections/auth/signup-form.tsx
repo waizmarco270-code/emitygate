@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -140,7 +141,7 @@ export default function SignupForm() {
                 <FormItem>
                   <FormLabel>Confirm Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} disabled={isLoading || isGoogle-loading}/>
+                    <Input type="password" placeholder="••••••••" {...field} disabled={isLoading || isGoogleLoading}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
