@@ -6,8 +6,24 @@ import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
 import FounderConsole from '@/components/founder-console';
 import { useUser, useFirestore } from '@/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
+import type { User } from 'firebase/auth';
+
+const createUserProfile = async (firestore: any, user: User) => {
+  if (!firestore) return null;
+  const userRef = doc(firestore, `users/${user.uid}`);
+  const userData: UserProfile = {
+    uid: user.uid,
+    email: user.email,
+    displayName: user.displayName,
+    photoURL: user.photoURL,
+    isAdmin: false,
+    isFounder: user.email === 'waizmonazzum270@gmail.com',
+  };
+  await setDoc(userRef, userData, { merge: true });
+  return userData;
+};
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
@@ -21,7 +37,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         if (doc.exists()) {
           setUserProfile(doc.data() as UserProfile);
         } else {
-          setUserProfile(null);
+          createUserProfile(firestore, user).then(setUserProfile);
         }
       });
       return () => unsub();

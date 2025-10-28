@@ -8,10 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
 import { useUser, useFirestore } from "@/firebase";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot, setDoc } from "firebase/firestore";
 import type { UserProfile } from "@/lib/types";
 import { useEffect, useState } from "react";
 import FounderDashboard from "@/components/sections/dashboard/founder-dashboard";
+import { Loader2 } from "lucide-react";
 
 const TaskCard = ({ title, tags }: { title: string, tags: string[] }) => (
     <Card className="bg-muted/50 mb-2">
@@ -81,21 +82,47 @@ export default function DashboardPage() {
   const { user } = useUser();
   const firestore = useFirestore();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
   useEffect(() => {
     if (user && firestore) {
-      const unsub = onSnapshot(doc(firestore, "users", user.uid), (doc) => {
+      const userRef = doc(firestore, "users", user.uid);
+      const unsub = onSnapshot(userRef, (doc) => {
         if (doc.exists()) {
           setUserProfile(doc.data() as UserProfile);
+          setIsLoadingProfile(false);
         } else {
-          setUserProfile(null);
+          // Profile doesn't exist, so let's create it.
+          const newUserProfile: UserProfile = {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+            isAdmin: false,
+            isFounder: user.email === 'waizmonazzum270@gmail.com',
+          };
+          setDoc(userRef, newUserProfile).then(() => {
+            setUserProfile(newUserProfile);
+            setIsLoadingProfile(false);
+          });
         }
       });
       return () => unsub();
-    } else {
-      setUserProfile(null);
+    } else if (!user) {
+      // If there's no user, we're not loading a profile.
+      setIsLoadingProfile(false);
     }
   }, [user, firestore]);
+
+  if (isLoadingProfile) {
+    return (
+      <PageWrapper>
+        <main className="container mx-auto py-12 flex justify-center items-center h-[80vh]">
+          <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        </main>
+      </PageWrapper>
+    )
+  }
 
   return (
     <PageWrapper>
