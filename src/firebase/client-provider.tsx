@@ -11,6 +11,8 @@ import FounderConsoleWrapper from '@/components/founder-console-wrapper';
 import { useDoc, useFirestore } from '.';
 import { doc } from 'firebase/firestore';
 import Head from 'next/head';
+import PageWrapper from '@/components/page-wrapper';
+import { Loader2 } from 'lucide-react';
 
 // This is a singleton pattern to ensure Firebase is initialized only once.
 let firebaseServices: FirebaseServices | null = null;
@@ -53,13 +55,21 @@ export const FirebaseClientProvider = ({
 
   return (
     <FirebaseProvider value={value}>
-      <FounderConsoleProvider>
-          <AppHead />
-          <Header />
-          <main className="flex-grow">{children}</main>
-          <Footer />
-          <FounderConsoleWrapper />
-      </FounderConsoleProvider>
+      {value ? (
+        <FounderConsoleProvider>
+            <AppHead />
+            <Header />
+            <main className="flex-grow">{children}</main>
+            <Footer />
+            <FounderConsoleWrapper />
+        </FounderConsoleProvider>
+      ) : (
+        <PageWrapper>
+          <main className="container mx-auto py-12 flex justify-center items-center h-[80vh]">
+            <Loader2 className="h-16 w-16 animate-spin text-primary" />
+          </main>
+        </PageWrapper>
+      )}
     </FirebaseProvider>
   );
 };
