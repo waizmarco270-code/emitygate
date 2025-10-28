@@ -2,6 +2,7 @@ import Hero from '@/components/sections/landing/hero';
 import EmpireStats from '@/components/sections/landing/empire-stats';
 import { Separator } from '@/components/ui/separator';
 import PageWrapper from '@/components/page-wrapper';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export default function Home() {
   return (
@@ -12,7 +13,9 @@ export default function Home() {
           <Separator className="my-12 md:my-24" />
           <EmpireStats />
         </div>
-        <div className="h-48"></div>
+        <div className="my-24">
+          <ThemeToggle />
+        </div>
       </main>
     </PageWrapper>
   );

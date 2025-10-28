@@ -48,7 +48,6 @@ const vaultPassphraseSchema = z.string();
 export async function checkVaultPassphrase(passphrase: string) {
   try {
     const validatedPassphrase = vaultPassphraseSchema.parse(passphrase);
-    // This is not secure for production. We will replace this with a proper secret management solution.
     const correctPassphrase = "empire";
 
     if (validatedPassphrase === correctPassphrase) {
