@@ -1,6 +1,6 @@
 
 'use server';
-
+import 'dotenv/config';
 import { z } from 'zod';
 import { aiApplicationReview } from '@/ai/flows/ai-application-review';
 
