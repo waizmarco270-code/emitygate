@@ -22,6 +22,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { getOrbitalProperties } from '@/lib/orbital-mechanics';
 
 const engagementData = [
     { name: 'Zenix', value: 4000 },
@@ -64,7 +65,7 @@ const OverviewTab = () => {
                 <Globe className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-4xl font-bold font-headline">98.7%</div>
+                <div className="text-4xl font.bold font-headline">98.7%</div>
                 <p className="text-xs text-muted-foreground">System-wide uptime</p>
             </CardContent>
         </Card>
@@ -117,9 +118,9 @@ const OverviewTab = () => {
             <CardContent className="space-y-4">
                 <p className="text-muted-foreground text-sm">A secure channel for your eyes only, Founder.</p>
                 <div className="p-4 bg-muted/50 rounded-lg border text-sm">
-                    <p className="font-mono text-primary/80">&gt; Initiate 'Project Chronos' directive.</p>
-                    <p className="font-mono text-muted-foreground mt-2">&gt; Security council meeting scheduled for 2024-Q4.</p>
-                    <p className="font-mono text-muted-foreground mt-2">&gt; NotesGate sentiment analysis shows positive trend in user adoption.</p>
+                    <p className="font-mono text-primary/80">> Initiate 'Project Chronos' directive.</p>
+                    <p className="font-mono text-muted-foreground mt-2">> Security council meeting scheduled for 2024-Q4.</p>
+                    <p className="font-mono text-muted-foreground mt-2">> NotesGate sentiment analysis shows positive trend in user adoption.</p>
                 </div>
             </CardContent>
         </Card>
@@ -181,21 +182,21 @@ const TeamMembersTab = () => {
     )
 };
 
-const ProjectForm = ({ project, onSave, onCancel }: { project?: Project | null, onSave: (project: Project) => void, onCancel: () => void }) => {
-    const [formData, setFormData] = useState<Omit<Project, 'id'>>(project || { name: '', description: '', icon: 'Link', color: 'hsl(207, 90%, 40%)', url: '', size: 50, orbit: 200, angle: 0, speed: 1 });
+const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project> | null, onSave: (project: Partial<Project>) => void, onCancel: () => void }) => {
+    const [formData, setFormData] = useState<Partial<Project>>(project || { name: '', description: '', icon: 'Link', color: 'hsl(207, 90%, 40%)', url: '', tier: 'inner', sizePreset: 'medium' });
     
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: name === 'size' || name === 'orbit' || name === 'angle' || name === 'speed' ? parseFloat(value) : value }));
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSelectChange = (value: string) => {
-        setFormData(prev => ({ ...prev, icon: value }));
+    const handleSelectChange = (name: string) => (value: string) => {
+        setFormData(prev => ({ ...prev, [name]: value }));
     }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({ ...formData, id: project?.id });
+        onSave(formData);
     }
 
     return (
@@ -214,7 +215,7 @@ const ProjectForm = ({ project, onSave, onCancel }: { project?: Project | null, 
             </div>
             <div className="space-y-2">
                 <Label htmlFor="icon">Icon</Label>
-                 <Select name="icon" value={formData.icon} onValueChange={handleSelectChange}>
+                 <Select name="icon" value={formData.icon} onValueChange={handleSelectChange('icon')}>
                     <SelectTrigger>
                         <SelectValue placeholder="Select an icon" />
                     </SelectTrigger>
@@ -231,20 +232,26 @@ const ProjectForm = ({ project, onSave, onCancel }: { project?: Project | null, 
                 <Input id="color" name="color" value={formData.color} onChange={handleChange} required />
             </div>
              <div className="space-y-2">
-                <Label htmlFor="size">Size</Label>
-                <Input id="size" name="size" type="number" value={formData.size} onChange={handleChange} required />
+                <Label htmlFor="tier">Orbital Tier</Label>
+                <Select name="tier" value={formData.tier} onValueChange={handleSelectChange('tier')}>
+                    <SelectTrigger><SelectValue placeholder="Select a tier" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="core">Core</SelectItem>
+                        <SelectItem value="inner">Inner Ring</SelectItem>
+                        <SelectItem value="outer">Outer Ring</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
              <div className="space-y-2">
-                <Label htmlFor="orbit">Orbit</Label>
-                <Input id="orbit" name="orbit" type="number" value={formData.orbit} onChange={handleChange} required />
-            </div>
-             <div className="space-y-2">
-                <Label htmlFor="angle">Angle</Label>
-                <Input id="angle" name="angle" type="number" value={formData.angle} onChange={handleChange} required />
-            </div>
-             <div className="space-y-2">
-                <Label htmlFor="speed">Speed</Label>
-                <Input id="speed" name="speed" type="number" step="0.1" value={formData.speed} onChange={handleChange} required />
+                <Label htmlFor="sizePreset">Planet Size</Label>
+                <Select name="sizePreset" value={formData.sizePreset} onValueChange={handleSelectChange('sizePreset')}>
+                    <SelectTrigger><SelectValue placeholder="Select a size" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="small">Small</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="large">Large</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
             <DialogFooter className="col-span-full">
                 <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
@@ -261,24 +268,33 @@ const ProjectsTab = () => {
     const { data: projects, loading, error } = useCollection<Project>(projectsQuery);
 
     const [isFormOpen, setFormOpen] = useState(false);
-    const [editingProject, setEditingProject] = useState<Project | null>(null);
+    const [editingProject, setEditingProject] = useState<Partial<Project> | null>(null);
     const [isSeedLoading, setSeedLoading] = useState(false);
 
-    const handleSaveProject = async (projectData: Project) => {
+    const handleSaveProject = async (projectData: Partial<Project>) => {
         if (!firestore) return;
         
-        const projectToSave = { ...projectData };
+        const orbitalProperties = getOrbitalProperties(projectData.tier, projectData.sizePreset);
+        const projectToSave: Omit<Project, 'id'> = {
+            name: projectData.name!,
+            description: projectData.description!,
+            icon: projectData.icon!,
+            color: projectData.color!,
+            url: projectData.url!,
+            tier: projectData.tier!,
+            sizePreset: projectData.sizePreset!,
+            ...orbitalProperties,
+        };
+
         let docRef;
-        if (projectToSave.id) {
-            docRef = doc(firestore, 'projects', projectToSave.id);
+        if (projectData.id) {
+            docRef = doc(firestore, 'projects', projectData.id);
         } else {
-            // Firestore will generate an ID if we use a collection reference
             docRef = doc(collection(firestore, 'projects'));
-            projectToSave.id = docRef.id;
         }
 
         try {
-            await setDoc(docRef, projectToSave);
+            await setDoc(docRef, projectToSave, { merge: true });
             toast({ title: "Project saved", description: `${projectToSave.name} has been updated in the cosmos.` });
         } catch (e: any) {
             toast({ variant: 'destructive', title: "Save failed", description: e.message });
@@ -343,6 +359,8 @@ const ProjectsTab = () => {
                                 <TableRow>
                                     <TableHead>Project</TableHead>
                                     <TableHead>URL</TableHead>
+                                    <TableHead>Tier</TableHead>
+                                    <TableHead>Size</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -364,6 +382,8 @@ const ProjectsTab = () => {
                                                     {project.url} <LinkIcon className="w-4 h-4" />
                                                 </Link>
                                             </TableCell>
+                                            <TableCell><Badge variant="outline">{project.tier}</Badge></TableCell>
+                                            <TableCell><Badge variant="outline">{project.sizePreset}</Badge></TableCell>
                                             <TableCell className="text-right">
                                                 <Button variant="ghost" size="icon" onClick={() => { setEditingProject(project); setFormOpen(true); }}>
                                                     <Pencil className="h-4 w-4" />
@@ -391,9 +411,9 @@ const ProjectsTab = () => {
             <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
                  <DialogContent className="max-w-3xl">
                     <DialogHeader>
-                        <DialogTitle>{editingProject ? 'Edit Project' : 'Add New Project'}</DialogTitle>
+                        <DialogTitle>{editingProject?.id ? 'Edit Project' : 'Add New Project'}</DialogTitle>
                         <DialogDescription>
-                            {editingProject ? `Modify the parameters of ${editingProject.name}.` : 'Add a new celestial body to the EmityGate cosmos.'}
+                            {editingProject?.id ? `Modify the parameters of ${editingProject.name}.` : 'Add a new celestial body to the EmityGate cosmos.'}
                         </DialogDescription>
                     </DialogHeader>
                     <ProjectForm 

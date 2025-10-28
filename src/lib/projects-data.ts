@@ -1,6 +1,7 @@
 
 import type { LucideIcon } from 'lucide-react';
 import { Atom, BrainCircuit, Bot, LandPlot, Puzzle, Film, Anchor, Gamepad2, Brain, Wand, PenTool, Link } from 'lucide-react';
+import { getOrbitalProperties, type OrbitalTier, type SizePreset } from './orbital-mechanics';
 
 export const ICONS: { [key: string]: LucideIcon } = {
   Atom,
@@ -25,6 +26,8 @@ export type Project = {
   icon: string;
   color: string;
   url: string;
+  tier: OrbitalTier,
+  sizePreset: SizePreset,
   // Orbit props
   size: number;
   orbit: number;
@@ -32,7 +35,9 @@ export type Project = {
   speed: number;
 };
 
-export const defaultProjects: Project[] = [
+type ProjectSeed = Omit<Project, 'size' | 'orbit' | 'angle' | 'speed'>;
+
+const projectSeeds: ProjectSeed[] = [
   {
     id: 'zenix',
     name: 'Zenix',
@@ -40,10 +45,8 @@ export const defaultProjects: Project[] = [
     icon: 'Wand',
     color: 'hsl(180, 80%, 60%)',
     url: '#',
-    size: 60,
-    orbit: 180,
-    angle: 30,
-    speed: 0.8,
+    tier: 'inner',
+    sizePreset: 'medium',
   },
   {
     id: 'notesgate',
@@ -52,10 +55,8 @@ export const defaultProjects: Project[] = [
     icon: 'PenTool',
     color: 'hsl(220, 80%, 70%)',
     url: '#',
-    size: 80,
-    orbit: 280,
-    angle: 110,
-    speed: 0.6,
+    tier: 'inner',
+    sizePreset: 'large',
   },
   {
     id: 'ledgate',
@@ -64,10 +65,8 @@ export const defaultProjects: Project[] = [
     icon: 'Atom',
     color: 'hsl(300, 80%, 70%)',
     url: '#',
-    size: 50,
-    orbit: 220,
-    angle: 190,
-    speed: 0.7,
+    tier: 'outer',
+    sizePreset: 'small',
   },
   {
     id: 'mindmate',
@@ -76,10 +75,8 @@ export const defaultProjects: Project[] = [
     icon: 'Brain',
     color: 'hsl(40, 80%, 60%)',
     url: '#',
-    size: 90,
-    orbit: 360,
-    angle: 260,
-    speed: 0.5,
+    tier: 'outer',
+    sizePreset: 'large',
   },
   {
     id: 'playgate',
@@ -88,33 +85,12 @@ export const defaultProjects: Project[] = [
     icon: 'Gamepad2',
     color: 'hsl(120, 80%, 60%)',
     url: '#',
-    size: 70,
-    orbit: 320,
-    angle: 330,
-    speed: 0.65,
-  },
-  {
-    id: 'glowphy',
-    name: 'GlowPhy',
-    description: 'A new project.',
-    icon: 'Film',
-    color: 'hsl(270, 70%, 75%)',
-    url: '#',
-    size: 65,
-    orbit: 250,
-    angle: 70,
-    speed: 0.9,
-  },
-  {
-    id: 'marcoai',
-    name: 'Marco Ai',
-    description: 'The central intelligence of the EmityGate empire.',
-    icon: 'BrainCircuit',
-    color: 'hsl(30, 100%, 50%)',
-    url: '#',
-    size: 100,
-    orbit: 400,
-    angle: 150,
-    speed: 0.4,
+    tier: 'core',
+    sizePreset: 'medium',
   },
 ];
+
+export const defaultProjects: Project[] = projectSeeds.map(seed => ({
+  ...seed,
+  ...getOrbitalProperties(seed.tier, seed.sizePreset),
+}));

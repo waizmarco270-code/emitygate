@@ -11,6 +11,7 @@ import { collection } from 'firebase/firestore';
 import type { Project } from '@/lib/projects-data';
 import { ICONS } from '@/lib/projects-data';
 import { Loader2 } from 'lucide-react';
+import Starfield from '@/components/starfield';
 
 const Hero = () => {
   const position = useMousePosition();
@@ -35,16 +36,20 @@ const Hero = () => {
 
   return (
     <section className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-background">
-      {/* Background Grid */}
-      <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"></div>
+      <Starfield
+        starCount={1000}
+        starColor={[255, 255, 255]}
+        speedFactor={0.05}
+        backgroundColor="black"
+      />
       
       {/* Galaxy System */}
-      <div className="relative w-[800px] h-[800px] flex items-center justify-center">
+      <div className="relative w-full h-full flex items-center justify-center" style={parallax(0.01)}>
         {/* Central Core */}
-        <div style={parallax(0.01)} className="z-10">
-          <div className="w-48 h-48 bg-primary/10 rounded-full flex items-center justify-center animate-pulse-glow">
-            <div className="w-32 h-32 bg-primary/20 rounded-full flex items-center justify-center">
-              <div className="w-20 h-20 bg-primary/30 rounded-full"></div>
+        <div className="z-10">
+          <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center shadow-[0_0_40px_hsl(var(--primary)/0.5)] animate-pulse-glow">
+            <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-primary/30 rounded-full"></div>
             </div>
           </div>
         </div>
@@ -67,7 +72,6 @@ const Hero = () => {
               className="absolute transition-transform duration-500 ease-out z-20 group"
               style={{
                 transform: `translate(${x}px, ${y}px)`,
-                ...parallax(0.01 + i * 0.005),
               }}
             >
               <div
@@ -82,7 +86,7 @@ const Hero = () => {
                 <Icon className="text-white" style={{width: p.size*0.5, height: p.size*0.5 }} />
               </div>
                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 text-center pointer-events-none">
-                  <p className="text-sm font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">{p.name}</p>
+                  <p className="text-sm font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">{p.name}</p>
               </div>
             </Link>
           );
