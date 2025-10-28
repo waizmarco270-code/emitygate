@@ -11,7 +11,7 @@ import { collection } from 'firebase/firestore';
 import type { Project } from '@/lib/projects-data';
 import { ICONS } from '@/lib/projects-data';
 import { Loader2 } from 'lucide-react';
-import Starfield from '@/components/starfield';
+import GalaxyBackground from './galaxy-background';
 
 const Hero = () => {
   const position = useMousePosition();
@@ -36,20 +36,15 @@ const Hero = () => {
 
   return (
     <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
-      <Starfield
-        starCount={1000}
-        starColor={[255, 255, 255]}
-        speedFactor={0.05}
-        backgroundColor="hsl(var(--background))"
-      />
+      <GalaxyBackground />
       
       {/* Galaxy System */}
       <div className="relative w-full h-full flex items-center justify-center" style={parallax(0.01)}>
         {/* Central Core */}
         <div className="z-10">
-          <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center shadow-[0_0_40px_hsl(var(--primary)/0.5)] animate-pulse-glow">
-            <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
-              <div className="w-8 h-8 bg-primary/30 rounded-full"></div>
+          <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center shadow-[0_0_60px_10px_hsl(var(--primary)/0.3)] animate-pulse-glow">
+            <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center shadow-[0_0_40px_hsl(var(--primary)/0.5)]">
+              <div className="w-8 h-8 bg-primary/30 rounded-full shadow-[0_0_20px_hsl(var(--primary)/0.7)]"></div>
             </div>
           </div>
         </div>
@@ -57,7 +52,7 @@ const Hero = () => {
         {loading && <Loader2 className="absolute w-16 h-16 text-primary animate-spin" />}
 
         {/* Orbiting Planets */}
-        {projectsData?.map((p, i) => {
+        {projectsData?.map((p) => {
           const angle = p.angle + time * p.speed;
           const x = Math.cos(angle * Math.PI / 180) * p.orbit;
           const y = Math.sin(angle * Math.PI / 180) * p.orbit;
@@ -75,12 +70,12 @@ const Hero = () => {
               }}
             >
               <div
-                className="rounded-full flex items-center justify-center transition-all hover:scale-110 hover:shadow-2xl"
+                className="rounded-full flex items-center justify-center transition-all hover:scale-110"
                 style={{
                   width: p.size,
                   height: p.size,
                   backgroundColor: p.color,
-                  boxShadow: `0 0 20px ${p.color}`,
+                  boxShadow: `0 0 20px ${p.color}, inset 0 0 10px ${p.color}`,
                 }}
               >
                 <Icon className="text-white" style={{width: p.size*0.5, height: p.size*0.5 }} />
