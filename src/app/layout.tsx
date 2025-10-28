@@ -5,21 +5,16 @@ import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
 import { FirebaseClientProvider } from '@/firebase';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps } from 'firebase/app';
+import { firebaseConfig } from '@/firebase/config';
 
-// This is a temporary app instance for server-side fetching.
-// It's not the same as the client-side instance.
-const tempApp = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+// Initialize a temporary app instance for server-side fetching ONLY if one doesn't exist.
+const tempApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 const db = getFirestore(tempApp);
 
 async function getAppSettings() {
-  // Ensure firestore is initialized before trying to use it.
-  if (!db) {
-    return { faviconUrl: null };
-  }
-  const appDetailsRef = doc(db, 'settings', 'appDetails');
   try {
+    const appDetailsRef = doc(db, 'settings', 'appDetails');
     const appDetailsSnap = await getDoc(appDetailsRef);
     if (appDetailsSnap.exists()) {
       return appDetailsSnap.data();
