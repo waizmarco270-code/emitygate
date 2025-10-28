@@ -18,11 +18,13 @@ const ProjectCard = ({ project }: { project: ImagePlaceholder }) => (
           data-ai-hint={project.imageHint}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+        <div className="absolute bottom-0 left-0 p-6">
+           <CardTitle className="font-headline tracking-wide text-white text-2xl">{project.id}</CardTitle>
+        </div>
       </div>
     </CardHeader>
     <CardContent className="p-6">
-      <CardTitle className="font-headline tracking-wide">{project.id}</CardTitle>
-      <CardDescription className="mt-2">{project.description}</CardDescription>
+      <CardDescription className="mt-2 h-24">{project.description}</CardDescription>
       <Button variant="outline" className="mt-4 w-full">
         View Project <ArrowRight className="ml-2 h-4 w-4" />
       </Button>

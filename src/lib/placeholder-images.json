@@ -2,31 +2,31 @@
   "placeholderImages": [
     {
       "id": "zenix",
-      "description": "Zenix AI Photo & Art Studio",
+      "description": "Zenix AI Photo & Art Studio: Revolutionizing digital creativity with generative AI, enabling users to produce stunning, unique visual content from simple text prompts.",
       "imageUrl": "https://images.unsplash.com/photo-1620120966883-d977b57a96ec?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxhYnN0cmFjdCUyMGdlbmVyYXRpdmV8ZW58MHx8fHwxNzYxNjYzMDM0fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "abstract generative"
     },
     {
       "id": "waizgpt",
-      "description": "WaizGPT Intelligent Assistant",
+      "description": "WaizGPT Intelligent Assistant: A sophisticated AI companion designed to streamline workflows, automate tasks, and provide insightful data analysis for peak efficiency.",
       "imageUrl": "https://images.unsplash.com/photo-1590859808308-3d2d9c515b1a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxuZXVyYWwlMjBuZXR3b3JrfGVufDB8fHx8MTc2MTU4MzkyNHww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "neural network"
     },
     {
       "id": "ledgate",
-      "description": "LedGate Smart Bill Automation",
+      "description": "LedGate Smart Bill Automation: An intelligent platform for managing and automating financial processes, offering clarity and control over enterprise-level billing.",
       "imageUrl": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxmaW5hbmNpYWwlMjBkYXRhfGVufDB8fHx8MTc2MTYzMTI2OXww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "financial data"
     },
     {
       "id": "waizverse",
-      "description": "WaizVerse Vault Universe & Games",
+      "description": "WaizVerse Vault Universe & Games: An immersive digital realm of interconnected games and experiences, built on the principles of ownership and decentralized identity.",
       "imageUrl": "https://images.unsplash.com/photo-1523712999610-f77fbcfc3843?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxmYW50YXN5JTIwbGFuZHNjYXBlfGVufDB8fHx8MTc2MTYwNjA0Mnww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "fantasy landscape"
     },
     {
       "id": "emitylabs",
-      "description": "EmityLabs AI & Cybersecurity R&D",
+      "description": "EmityLabs AI & Cybersecurity R&D: The bleeding-edge research division dedicated to pioneering new frontiers in artificial intelligence and next-generation digital defense.",
       "imageUrl": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxjeWJlciUyMHNlY3VyaXR5fGVufDB8fHx8MTc2MTU2MTY4M3ww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "cyber security"
     }
