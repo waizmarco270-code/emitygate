@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -33,6 +34,23 @@
         }
       },
       "required": ["uid", "email"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "Represents a project in the EmityGate empire.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The name of the project." },
+        "description": { "type": "string", "description": "A short description of the project." },
+        "icon": { "type": "string", "description": "The name of the lucide-react icon for the project." },
+        "color": { "type": "string", "description": "The hsl color of the project planet." },
+        "url": { "type": "string", "format": "uri", "description": "The URL of the project." },
+        "size": { "type": "number", "description": "The size of the planet in pixels." },
+        "orbit": { "type": "number", "description": "The orbit radius of the planet in pixels." },
+        "angle": { "type": "number", "description": "The starting angle of the planet on its orbit." },
+        "speed": { "type": "number", "description": "The orbital speed of the planet." }
+      },
+      "required": ["name", "description", "icon", "color", "url", "size", "orbit", "angle", "speed"]
     }
   },
   "auth": {
@@ -44,6 +62,12 @@
         "$ref": "#/entities/UserProfile"
       },
       "description": "Stores public information about a user."
+    },
+    "/projects/{projectId}": {
+        "schema": {
+            "$ref": "#/entities/Project"
+        },
+        "description": "Stores information about the EmityGate projects."
     }
   }
 }

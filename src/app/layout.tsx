@@ -32,11 +32,11 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <FirebaseClientProvider>
-            <Header />
-            <div className="min-h-screen">
-              {children}
+            <div className="flex flex-col min-h-screen">
+              <Header />
+              <main className="flex-grow">{children}</main>
+              <Footer />
             </div>
-            <Footer />
           </FirebaseClientProvider>
           <Toaster />
         </ThemeProvider>

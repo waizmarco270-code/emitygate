@@ -1,12 +1,28 @@
 
 import type { LucideIcon } from 'lucide-react';
-import { Atom, BrainCircuit, Bot, LandPlot, Puzzle, Film, Anchor, Gamepad2, Brain, Wand, PenTool } from 'lucide-react';
+import { Atom, BrainCircuit, Bot, LandPlot, Puzzle, Film, Anchor, Gamepad2, Brain, Wand, PenTool, Link } from 'lucide-react';
+
+export const ICONS: { [key: string]: LucideIcon } = {
+  Atom,
+  BrainCircuit,
+  Bot,
+  LandPlot,
+  Puzzle,
+  Film,
+  Anchor,
+  Gamepad2,
+  Brain,
+  Wand,
+  PenTool,
+  Link,
+};
+
 
 export type Project = {
-  id: string;
+  id?: string;
   name: string;
-  description: string;
-  icon: LucideIcon;
+  description:string;
+  icon: string;
   color: string;
   url: string;
   // Orbit props
@@ -16,12 +32,12 @@ export type Project = {
   speed: number;
 };
 
-export const projectsData: Project[] = [
+export const defaultProjects: Project[] = [
   {
     id: 'zenix',
     name: 'Zenix',
     description: 'Zenix AI Photo & Art Studio: Revolutionizing digital creativity with generative AI, enabling users to produce stunning, unique visual content from simple text prompts.',
-    icon: Wand,
+    icon: 'Wand',
     color: 'hsl(180, 80%, 60%)',
     url: '#',
     size: 60,
@@ -33,7 +49,7 @@ export const projectsData: Project[] = [
     id: 'notesgate',
     name: 'NotesGate',
     description: 'A sophisticated AI companion designed to streamline workflows, automate tasks, and provide insightful data analysis for peak efficiency.',
-    icon: PenTool,
+    icon: 'PenTool',
     color: 'hsl(220, 80%, 70%)',
     url: '#',
     size: 80,
@@ -45,7 +61,7 @@ export const projectsData: Project[] = [
     id: 'ledgate',
     name: 'LedGate',
     description: 'LedGate Smart Bill Automation: An intelligent platform for managing and automating financial processes, offering clarity and control over enterprise-level billing.',
-    icon: Atom,
+    icon: 'Atom',
     color: 'hsl(300, 80%, 70%)',
     url: '#',
     size: 50,
@@ -57,7 +73,7 @@ export const projectsData: Project[] = [
     id: 'mindmate',
     name: 'MindMate',
     description: 'MindMate: An immersive digital realm of interconnected games and experiences, built on the principles of ownership and decentralized identity.',
-    icon: Brain,
+    icon: 'Brain',
     color: 'hsl(40, 80%, 60%)',
     url: '#',
     size: 90,
@@ -69,7 +85,7 @@ export const projectsData: Project[] = [
     id: 'playgate',
     name: 'PlayGate',
     description: 'PlayGate R&D: The bleeding-edge research division dedicated to pioneering new frontiers in artificial intelligence and next-generation digital defense.',
-    icon: Gamepad2,
+    icon: 'Gamepad2',
     color: 'hsl(120, 80%, 60%)',
     url: '#',
     size: 70,
@@ -81,7 +97,7 @@ export const projectsData: Project[] = [
     id: 'glowphy',
     name: 'GlowPhy',
     description: 'A new project.',
-    icon: Film,
+    icon: 'Film',
     color: 'hsl(270, 70%, 75%)',
     url: '#',
     size: 65,
@@ -93,7 +109,7 @@ export const projectsData: Project[] = [
     id: 'marcoai',
     name: 'Marco Ai',
     description: 'The central intelligence of the EmityGate empire.',
-    icon: BrainCircuit,
+    icon: 'BrainCircuit',
     color: 'hsl(30, 100%, 50%)',
     url: '#',
     size: 100,

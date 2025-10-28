@@ -1,21 +1,27 @@
 
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { AreaChart, BarChart as BarChartIcon, FileText, Globe, Users, Waypoints, Link as LinkIcon, Pencil, HardDrive } from "lucide-react";
+import { BarChart as BarChartIcon, FileText, Globe, Users, Waypoints, Link as LinkIcon, Pencil, Trash2, PlusCircle, Check, X, HardDrive } from "lucide-react";
 import { Bar, BarChart as RechartsBar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useCollection } from "@/firebase";
-import { useFirestore } from "@/firebase/provider";
-import { collection } from "firebase/firestore";
+import { useCollection, useFirestore } from "@/firebase";
+import { collection, doc, setDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import type { UserProfile } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { projectsData, type Project } from "@/lib/projects-data";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import { ICONS, defaultProjects, type Project } from '@/lib/projects-data';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 
 const engagementData = [
     { name: 'Zenix', value: 4000 },
@@ -25,9 +31,13 @@ const engagementData = [
     { name: 'PlayGate', value: 1890 },
 ];
 
-const OverviewTab = () => (
+const OverviewTab = () => {
+    const firestore = useFirestore();
+    const projectsQuery = firestore ? collection(firestore, 'projects') : null;
+    const { data: projectsData } = useCollection<Project>(projectsQuery);
+
+    return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Main Metric Cards */}
         <Card className="lg:col-span-1 border-primary/20 hover:border-primary/50 transition-all glow-primary">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Empire Population</CardTitle>
@@ -44,7 +54,7 @@ const OverviewTab = () => (
                 <HardDrive className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-4xl font-bold font-headline">{projectsData.length}</div>
+                <div className="text-4xl font-bold font-headline">{projectsData?.length ?? <Loader2 className="h-8 w-8 animate-spin" />}</div>
                 <p className="text-xs text-muted-foreground">2 initiatives in R&D</p>
             </CardContent>
         </Card>
@@ -97,7 +107,6 @@ const OverviewTab = () => (
             </CardContent>
         </Card>
 
-        {/* Founder's Log */}
         <Card className="lg:col-span-2">
              <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -115,7 +124,7 @@ const OverviewTab = () => (
             </CardContent>
         </Card>
     </div>
-);
+)};
 
 const TeamMembersTab = () => {
     const firestore = useFirestore();
@@ -170,54 +179,234 @@ const TeamMembersTab = () => {
             </CardContent>
         </Card>
     )
-}
+};
 
-const ProjectsTab = () => (
-    <Card>
-        <CardHeader>
-            <CardTitle>Project Constellation</CardTitle>
-            <CardDescription>Manage the projects orbiting the EmityGate core.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Project</TableHead>
-                        <TableHead>URL</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {projectsData.map((project) => {
-                        const Icon = project.icon;
-                        return (
-                            <TableRow key={project.id}>
-                                <TableCell>
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: project.color }}>
-                                            <Icon className="w-5 h-5 text-white" />
-                                        </div>
-                                        <span className="font-medium">{project.name}</span>
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <Link href={project.url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
-                                        {project.url} <LinkIcon className="w-4 h-4" />
-                                    </Link>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <Button variant="ghost" size="icon" disabled>
-                                        <Pencil className="h-4 w-4" />
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        );
-                    })}
-                </TableBody>
-            </Table>
-        </CardContent>
-    </Card>
-);
+const ProjectForm = ({ project, onSave, onCancel }: { project?: Project | null, onSave: (project: Project) => void, onCancel: () => void }) => {
+    const [formData, setFormData] = useState<Omit<Project, 'id'>>(project || { name: '', description: '', icon: 'Link', color: 'hsl(207, 90%, 40%)', url: '', size: 50, orbit: 200, angle: 0, speed: 1 });
+    
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: name === 'size' || name === 'orbit' || name === 'angle' || name === 'speed' ? parseFloat(value) : value }));
+    };
+
+    const handleSelectChange = (value: string) => {
+        setFormData(prev => ({ ...prev, icon: value }));
+    }
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSave({ ...formData, id: project?.id });
+    }
+
+    return (
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 p-1">
+            <div className="space-y-2">
+                <Label htmlFor="name">Project Name</Label>
+                <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="url">URL</Label>
+                <Input id="url" name="url" value={formData.url} onChange={handleChange} required />
+            </div>
+            <div className="col-span-full space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" name="description" value={formData.description} onChange={handleChange} required />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="icon">Icon</Label>
+                 <Select name="icon" value={formData.icon} onValueChange={handleSelectChange}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select an icon" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {Object.keys(ICONS).map(iconName => {
+                            const Icon = ICONS[iconName];
+                            return <SelectItem key={iconName} value={iconName}><span className="flex items-center gap-2"><Icon /> {iconName}</span></SelectItem>
+                        })}
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="color">Color (HSL)</Label>
+                <Input id="color" name="color" value={formData.color} onChange={handleChange} required />
+            </div>
+             <div className="space-y-2">
+                <Label htmlFor="size">Size</Label>
+                <Input id="size" name="size" type="number" value={formData.size} onChange={handleChange} required />
+            </div>
+             <div className="space-y-2">
+                <Label htmlFor="orbit">Orbit</Label>
+                <Input id="orbit" name="orbit" type="number" value={formData.orbit} onChange={handleChange} required />
+            </div>
+             <div className="space-y-2">
+                <Label htmlFor="angle">Angle</Label>
+                <Input id="angle" name="angle" type="number" value={formData.angle} onChange={handleChange} required />
+            </div>
+             <div className="space-y-2">
+                <Label htmlFor="speed">Speed</Label>
+                <Input id="speed" name="speed" type="number" step="0.1" value={formData.speed} onChange={handleChange} required />
+            </div>
+            <DialogFooter className="col-span-full">
+                <Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button>
+                <Button type="submit">Save Project</Button>
+            </DialogFooter>
+        </form>
+    );
+};
+
+const ProjectsTab = () => {
+    const firestore = useFirestore();
+    const { toast } = useToast();
+    const projectsQuery = firestore ? collection(firestore, 'projects') : null;
+    const { data: projects, loading, error } = useCollection<Project>(projectsQuery);
+
+    const [isFormOpen, setFormOpen] = useState(false);
+    const [editingProject, setEditingProject] = useState<Project | null>(null);
+    const [isSeedLoading, setSeedLoading] = useState(false);
+
+    const handleSaveProject = async (projectData: Project) => {
+        if (!firestore) return;
+        
+        const projectToSave = { ...projectData };
+        let docRef;
+        if (projectToSave.id) {
+            docRef = doc(firestore, 'projects', projectToSave.id);
+        } else {
+            // Firestore will generate an ID if we use a collection reference
+            docRef = doc(collection(firestore, 'projects'));
+            projectToSave.id = docRef.id;
+        }
+
+        try {
+            await setDoc(docRef, projectToSave);
+            toast({ title: "Project saved", description: `${projectToSave.name} has been updated in the cosmos.` });
+        } catch (e: any) {
+            toast({ variant: 'destructive', title: "Save failed", description: e.message });
+        } finally {
+            setFormOpen(false);
+            setEditingProject(null);
+        }
+    };
+
+    const handleDeleteProject = async (projectId: string) => {
+        if (!firestore) return;
+        if (!confirm("Are you sure you want to remove this project from the cosmos? This action cannot be undone.")) {
+            return;
+        }
+        try {
+            await deleteDoc(doc(firestore, 'projects', projectId));
+            toast({ title: "Project removed", description: "The project has been removed from the cosmos."});
+        } catch(e: any) {
+            toast({ variant: 'destructive', title: "Delete failed", description: e.message });
+        }
+    };
+    
+    const handleSeedData = async () => {
+        if (!firestore) return;
+        setSeedLoading(true);
+        try {
+            const batch = writeBatch(firestore);
+            defaultProjects.forEach(project => {
+                const docRef = doc(firestore, 'projects', project.id!);
+                batch.set(docRef, project);
+            });
+            await batch.commit();
+            toast({ title: "Cosmos Seeded", description: "The default project constellation has been deployed."});
+        } catch (e: any) {
+             toast({ variant: 'destructive', title: "Seed failed", description: e.message });
+        }
+        setSeedLoading(false);
+    }
+
+    if (loading) {
+        return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+    }
+
+    if (error) {
+        return <div className="text-destructive">Error loading projects: {error.message}</div>
+    }
+
+    return (
+        <>
+            <Card>
+                <CardHeader className="flex-row items-center justify-between">
+                    <div>
+                        <CardTitle>Project Constellation</CardTitle>
+                        <CardDescription>Manage the projects orbiting the EmityGate core.</CardDescription>
+                    </div>
+                    <Button size="sm" onClick={() => { setEditingProject(null); setFormOpen(true); }}><PlusCircle /> Add Project</Button>
+                </CardHeader>
+                <CardContent>
+                    {projects && projects.length > 0 ? (
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Project</TableHead>
+                                    <TableHead>URL</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {projects.map((project) => {
+                                    const Icon = ICONS[project.icon] || LinkIcon;
+                                    return (
+                                        <TableRow key={project.id}>
+                                            <TableCell>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: project.color }}>
+                                                        <Icon className="w-5 h-5 text-white" />
+                                                    </div>
+                                                    <span className="font-medium">{project.name}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Link href={project.url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+                                                    {project.url} <LinkIcon className="w-4 h-4" />
+                                                </Link>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <Button variant="ghost" size="icon" onClick={() => { setEditingProject(project); setFormOpen(true); }}>
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteProject(project.id!)}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    ) : (
+                         <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                            <p className="text-muted-foreground">The cosmos is empty.</p>
+                            <Button className="mt-4" onClick={handleSeedData} disabled={isSeedLoading}>
+                                {isSeedLoading ? <Loader2 className="animate-spin mr-2" /> : null}
+                                Seed Default Projects
+                            </Button>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+            <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
+                 <DialogContent className="max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>{editingProject ? 'Edit Project' : 'Add New Project'}</DialogTitle>
+                        <DialogDescription>
+                            {editingProject ? `Modify the parameters of ${editingProject.name}.` : 'Add a new celestial body to the EmityGate cosmos.'}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <ProjectForm 
+                        project={editingProject} 
+                        onSave={handleSaveProject} 
+                        onCancel={() => { setFormOpen(false); setEditingProject(null); }}
+                    />
+                </DialogContent>
+            </Dialog>
+        </>
+    );
+};
+
 
 export default function FounderDashboard() {
     return (

@@ -6,10 +6,17 @@ import Link from 'next/link';
 import { useMousePosition } from '@/hooks/use-mouse-position';
 import { Button } from '@/components/ui/button';
 import { ArrowDown } from 'lucide-react';
-import { projectsData } from '@/lib/projects-data';
+import { useCollection, useFirestore } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { Project } from '@/lib/projects-data';
+import { ICONS } from '@/lib/projects-data';
+import { Loader2 } from 'lucide-react';
 
 const Hero = () => {
   const position = useMousePosition();
+  const firestore = useFirestore();
+  const projectsQuery = firestore ? collection(firestore, 'projects') : null;
+  const { data: projectsData, loading } = useCollection<Project>(projectsQuery);
 
   const parallax = (factor: number) => {
     if (typeof window === 'undefined') return { transform: 'translate(0, 0)' };
@@ -42,12 +49,14 @@ const Hero = () => {
           </div>
         </div>
 
+        {loading && <Loader2 className="absolute w-16 h-16 text-primary animate-spin" />}
+
         {/* Orbiting Planets */}
-        {projectsData.map((p, i) => {
+        {projectsData?.map((p, i) => {
           const angle = p.angle + time * p.speed;
           const x = Math.cos(angle * Math.PI / 180) * p.orbit;
           const y = Math.sin(angle * Math.PI / 180) * p.orbit;
-          const Icon = p.icon;
+          const Icon = ICONS[p.icon] || ICONS['Link'];
 
           return (
             <Link
@@ -55,10 +64,10 @@ const Hero = () => {
               href={p.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="absolute transition-transform duration-500 ease-out z-20"
+              className="absolute transition-transform duration-500 ease-out z-20 group"
               style={{
+                transform: `translate(${x}px, ${y}px)`,
                 ...parallax(0.01 + i * 0.005),
-                transform: `translate(${x}px, ${y}px) ${parallax(0.01 + i * 0.005).transform}`,
               }}
             >
               <div
@@ -71,6 +80,9 @@ const Hero = () => {
                 }}
               >
                 <Icon className="text-white" style={{width: p.size*0.5, height: p.size*0.5 }} />
+              </div>
+               <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 text-center pointer-events-none">
+                  <p className="text-sm font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">{p.name}</p>
               </div>
             </Link>
           );

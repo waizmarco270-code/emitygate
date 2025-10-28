@@ -1,3 +1,6 @@
+
+'use client';
+
 import { Twitter, Linkedin, Github } from 'lucide-react';
 import EmityGateLogo from '@/components/icons/emity-gate-logo';
 

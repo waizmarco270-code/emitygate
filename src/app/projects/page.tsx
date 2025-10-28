@@ -1,16 +1,20 @@
 
+'use client';
+
 import PageWrapper from "@/components/page-wrapper";
-import { projectsData, type Project } from "@/lib/projects-data";
+import { ICONS, type Project } from "@/lib/projects-data";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import Image from "next/image";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { placeHolderImages } from "@/lib/placeholder-images";
+import { useCollection, useFirestore } from "@/firebase";
+import { collection } from "firebase/firestore";
 
 const ProjectCard = ({ project }: { project: Project }) => {
   const placeHolder = placeHolderImages.find(p => p.id === project.id);
-  const Icon = project.icon;
+  const Icon = ICONS[project.icon] || ICONS['Link'];
 
   return (
     <Card className="group overflow-hidden border-primary/20 hover:border-primary/50 transition-all hover:scale-[1.02] shadow-lg hover:shadow-primary/20">
@@ -46,6 +50,10 @@ const ProjectCard = ({ project }: { project: Project }) => {
 };
 
 export default function ProjectsPage() {
+  const firestore = useFirestore();
+  const projectsQuery = firestore ? collection(firestore, 'projects') : null;
+  const { data: projectsData, loading } = useCollection<Project>(projectsQuery);
+
   return (
     <PageWrapper>
       <main className="container mx-auto py-12 md:py-24">
@@ -55,11 +63,17 @@ export default function ProjectsPage() {
             A glimpse into the core projects that define the EmityGate empire and shape the future.
           </p>
         </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {projectsData.map(project => (
-            <ProjectCard key={project.id} project={project} />
-          ))}
-        </div>
+        {loading ? (
+            <div className="flex justify-center items-center h-64">
+                <Loader2 className="w-16 h-16 animate-spin text-primary" />
+            </div>
+        ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {projectsData?.map(project => (
+                <ProjectCard key={project.id} project={project} />
+            ))}
+            </div>
+        )}
       </main>
     </PageWrapper>
   );
