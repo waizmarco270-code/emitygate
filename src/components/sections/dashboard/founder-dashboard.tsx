@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { BarChart as BarChartIcon, FileText, Globe, Users, Waypoints, Link as LinkIcon, Pencil, Trash2, PlusCircle, HardDrive, Terminal, Settings } from "lucide-react";
+import { BarChart as BarChartIcon, FileText, Globe, Users, Waypoints, Link as LinkIcon, Pencil, Trash2, PlusCircle, HardDrive, Terminal, Settings, ListTodo, BrainCircuit, Sparkles } from "lucide-react";
 import { Bar, BarChart as RechartsBar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -26,6 +26,9 @@ import { useToast } from '@/hooks/use-toast';
 import { getOrbitalProperties } from '@/lib/orbital-mechanics';
 import { useFounderConsole } from '@/context/founder-console-context';
 import Image from 'next/image';
+import { updateAppSettingsAction } from '@/lib/actions';
+import { processFounderLog, type ProcessFounderLogOutput } from '@/ai/flows/process-founder-log';
+
 
 const engagementData = [
     { name: 'Zenix', value: 4000 },
@@ -35,11 +38,93 @@ const engagementData = [
     { name: 'PlayGate', value: 1890 },
 ];
 
+const FounderLog = () => {
+    const { setIsConsoleOpen } = useFounderConsole();
+    const [logEntry, setLogEntry] = useState('');
+    const [analysis, setAnalysis] = useState<ProcessFounderLogOutput | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const { toast } = useToast();
+
+    const handleProcessLog = async () => {
+        if (!logEntry.trim()) {
+            toast({ variant: 'destructive', title: 'Log is empty', description: 'You must write something to commit to the log.'});
+            return;
+        }
+        setIsLoading(true);
+        setAnalysis(null);
+        try {
+            const result = await processFounderLog({ logEntry });
+            setAnalysis(result);
+            toast({ title: 'Log Processed', description: 'Kairos has analyzed your entry.'});
+        } catch (e: any) {
+            toast({ variant: 'destructive', title: 'Analysis Failed', description: e.message });
+        }
+        setIsLoading(false);
+    }
+
+    return (
+        <Card className="lg:col-span-2">
+             <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    Founder's Log
+                </CardTitle>
+                <CardDescription>A secure, AI-powered channel for your eyes only, Founder.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+               {analysis ? (
+                   <div className="space-y-4 animate-page-enter">
+                        <Card>
+                            <CardHeader><CardTitle className="text-lg">Log Summary</CardTitle></CardHeader>
+                            <CardContent><p className="text-muted-foreground">{analysis.summary}</p></CardContent>
+                        </Card>
+                         <div className="grid grid-cols-2 gap-4">
+                             <Card>
+                                <CardHeader><CardTitle className="text-lg flex items-center gap-2"><ListTodo /> Action Items</CardTitle></CardHeader>
+                                <CardContent>
+                                    <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                                        {analysis.actionItems.map((item, i) => <li key={i}>{item}</li>)}
+                                    </ul>
+                                </CardContent>
+                            </Card>
+                              <Card>
+                                <CardHeader><CardTitle className="text-lg flex items-center gap-2"><BrainCircuit /> Sentiment</CardTitle></CardHeader>
+                                <CardContent>
+                                    <p className="font-headline text-2xl text-primary">{analysis.sentiment}</p>
+                                </CardContent>
+                            </Card>
+                         </div>
+                        <Button variant="outline" onClick={() => setAnalysis(null)} className="w-full">New Log Entry</Button>
+                   </div>
+               ) : (
+                <>
+                    <Textarea 
+                        placeholder="Record your thoughts, strategies, and directives..." 
+                        rows={6}
+                        value={logEntry}
+                        onChange={(e) => setLogEntry(e.target.value)}
+                        disabled={isLoading}
+                    />
+                    <div className="flex gap-2">
+                        <Button onClick={handleProcessLog} className="w-full" disabled={isLoading}>
+                           {isLoading ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                            Commit to Log
+                        </Button>
+                        <Button onClick={() => setIsConsoleOpen(true)} variant="secondary">
+                            <Terminal />
+                        </Button>
+                    </div>
+                </>
+               )}
+            </CardContent>
+        </Card>
+    )
+}
+
 const OverviewTab = () => {
     const firestore = useFirestore();
     const projectsQuery = firestore ? collection(firestore, 'projects') : null;
     const { data: projectsData } = useCollection<Project>(projectsQuery);
-    const { setIsConsoleOpen } = useFounderConsole();
 
     return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -112,26 +197,7 @@ const OverviewTab = () => {
             </CardContent>
         </Card>
 
-        <Card className="lg:col-span-2">
-             <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-primary" />
-                    Founder's Log
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <p className="text-muted-foreground text-sm">A secure channel for your eyes only, Founder.</p>
-                <div className="p-4 bg-muted/50 rounded-lg border text-sm">
-                    <p className="font-mono text-primary/80">> Initiate 'Project Chronos' directive.</p>
-                    <p className="font-mono text-muted-foreground mt-2">> Security council meeting scheduled for 2024-Q4.</p>
-                    <p className="font-mono text-muted-foreground mt-2">> NotesGate sentiment analysis shows positive trend in user adoption.</p>
-                </div>
-                 <Button onClick={() => setIsConsoleOpen(true)} className="w-full">
-                    <Terminal className="mr-2 h-4 w-4" />
-                    Open Founder Console
-                </Button>
-            </CardContent>
-        </Card>
+        <FounderLog />
     </div>
 )};
 
@@ -190,7 +256,7 @@ const TeamMembersTab = () => {
     )
 };
 
-const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project> | null, onSave: (project: Partial<Project>, iconFile?: File) => void, onCancel: () => void }) => {
+const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project> | null, onSave: (project: Partial<Project>) => void, onCancel: () => void }) => {
     const [formData, setFormData] = useState<Partial<Project>>({
       name: '',
       description: '',
@@ -201,7 +267,6 @@ const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project>
       sizePreset: 'medium',
       ...project,
     });
-    const [iconFile, setIconFile] = useState<File | undefined>();
     
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -215,7 +280,6 @@ const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project>
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            setIconFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
                 setFormData(prev => ({ ...prev, iconImage: reader.result as string }))
@@ -226,7 +290,7 @@ const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project>
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(formData, iconFile);
+        onSave(formData);
     }
 
     return (
@@ -307,12 +371,11 @@ const ProjectsTab = ({ onSetProjectToDelete }: { onSetProjectToDelete: (project:
     const [editingProject, setEditingProject] = useState<Partial<Project> | null>(null);
     const [isSeedLoading, setSeedLoading] = useState(false);
 
-
     const handleSaveProject = async (projectData: Partial<Project>) => {
         if (!firestore) return;
         
         const orbitalProperties = getOrbitalProperties(projectData.tier, projectData.sizePreset);
-        const projectToSave: Partial<Project> = {
+        const projectToSave: Omit<Project, 'id'> = {
             name: projectData.name!,
             description: projectData.description!,
             icon: projectData.icon!,
@@ -371,7 +434,9 @@ const ProjectsTab = ({ onSetProjectToDelete }: { onSetProjectToDelete: (project:
                         <CardTitle>Project Constellation</CardTitle>
                         <CardDescription>Manage the projects orbiting the EmityGate core.</CardDescription>
                     </div>
-                    <Button size="sm" onClick={() => { setEditingProject(null); setFormOpen(true); }}><PlusCircle /> Add Project</Button>
+                     <div className="flex items-center gap-2">
+                        <Button size="sm" onClick={() => { setEditingProject(null); setFormOpen(true); }}><PlusCircle /> Add Project</Button>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     {projects && projects.length > 0 ? (
@@ -455,7 +520,6 @@ const ProjectsTab = ({ onSetProjectToDelete }: { onSetProjectToDelete: (project:
         </>
     );
 };
-
 
 export default function FounderDashboard() {
     const firestore = useFirestore();
