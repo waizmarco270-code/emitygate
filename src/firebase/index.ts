@@ -9,8 +9,8 @@ import {
   getApps,
   initializeApp,
 } from 'firebase/app';
-import { type Auth, getAuth, connectAuthEmulator } from 'firebase/auth';
-import { type Firestore, getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { type Auth, getAuth } from 'firebase/auth';
+import { type Firestore, getFirestore } from 'firebase/firestore';
 
 export type FirebaseServices = {
   app: FirebaseApp;
@@ -29,11 +29,6 @@ export function initializeFirebase(
   const app = apps.length > 0 ? apps[0] : initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const firestore = getFirestore(app);
-
-  // Point to the emulators running on localhost.
-  // The SDK will not throw an error if the emulators are not running.
-  connectFirestoreEmulator(firestore, 'localhost', 8080);
-  connectAuthEmulator(auth, 'http://localhost:9099');
   
   firebaseServices = {
     app,
