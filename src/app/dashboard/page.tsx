@@ -1,3 +1,4 @@
+
 'use client';
 
 import PageWrapper from "@/components/page-wrapper";
@@ -8,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
 import { useUser, useFirestore } from "@/firebase";
-import { doc, onSnapshot, setDoc } from "firebase/firestore";
+import { doc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore";
 import type { UserProfile } from "@/lib/types";
 import { useEffect, useState } from "react";
 import FounderDashboard from "@/components/sections/dashboard/founder-dashboard";
@@ -90,7 +91,6 @@ export default function DashboardPage() {
       const unsub = onSnapshot(userRef, (doc) => {
         if (doc.exists()) {
           setUserProfile(doc.data() as UserProfile);
-          setIsLoadingProfile(false);
         } else {
           // Profile doesn't exist, so let's create it.
           const newUserProfile: UserProfile = {
@@ -103,9 +103,9 @@ export default function DashboardPage() {
           };
           setDoc(userRef, newUserProfile).then(() => {
             setUserProfile(newUserProfile);
-            setIsLoadingProfile(false);
           });
         }
+        setIsLoadingProfile(false);
       });
       return () => unsub();
     } else if (!user) {

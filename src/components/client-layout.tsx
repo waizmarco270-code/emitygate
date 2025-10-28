@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
 import FounderConsole from '@/components/founder-console';
-import { useUser, useFirestore } from '@/firebase';
+import { useUser, useFirestore, FirebaseClientProvider } from '@/firebase';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import type { UserProfile } from '@/lib/types';
 import type { User } from 'firebase/auth';
@@ -25,7 +25,7 @@ const createUserProfile = async (firestore: any, user: User) => {
   return userData;
 };
 
-export default function ClientLayout({ children }: { children: React.ReactNode }) {
+function MainAppContent({ children }: { children: React.ReactNode }) {
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
   const { user } = useUser();
   const firestore = useFirestore();
@@ -70,4 +70,15 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <FounderConsole isOpen={isConsoleOpen} onClose={() => setIsConsoleOpen(false)} userProfile={userProfile} />
     </>
   );
+}
+
+
+export default function ClientLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <FirebaseClientProvider>
+      <MainAppContent>
+        {children}
+      </MainAppContent>
+    </FirebaseClientProvider>
+  )
 }
