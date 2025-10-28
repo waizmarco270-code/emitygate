@@ -22,7 +22,7 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
-        {/* Favicon will be rendered client-side */}
+        <link rel="icon" href="/logo.jpg" />
       </head>
       <body className="font-body antialiased bg-background overflow-x-hidden">
         <ThemeProvider

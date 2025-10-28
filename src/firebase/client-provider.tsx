@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo } from 'react';
@@ -8,9 +9,6 @@ import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
 import { FounderConsoleProvider } from '@/context/founder-console-context';
 import FounderConsoleWrapper from '@/components/founder-console-wrapper';
-import { useDoc, useFirestore } from '.';
-import { doc } from 'firebase/firestore';
-import Head from 'next/head';
 import PageWrapper from '@/components/page-wrapper';
 import { Loader2 } from 'lucide-react';
 
@@ -24,18 +22,6 @@ const initializeClientFirebase = () => {
     firebaseServices = initializeFirebase(firebaseConfig);
     return firebaseServices;
 };
-
-const AppHead = () => {
-    const firestore = useFirestore();
-    const appDetailsRef = firestore ? doc(firestore, 'settings', 'appDetails') : null;
-    const { data: appDetails } = useDoc<{ faviconUrl: string }>(appDetailsRef);
-
-    return (
-        <Head>
-            {appDetails?.faviconUrl && <link rel="icon" href={appDetails.faviconUrl} />}
-        </Head>
-    )
-}
 
 export const FirebaseClientProvider = ({
   children,
@@ -57,7 +43,6 @@ export const FirebaseClientProvider = ({
     <FirebaseProvider value={value}>
       {value ? (
         <FounderConsoleProvider>
-            <AppHead />
             <Header />
             <main className="flex-grow">{children}</main>
             <Footer />

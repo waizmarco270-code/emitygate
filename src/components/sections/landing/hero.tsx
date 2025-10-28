@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -6,8 +7,8 @@ import Image from 'next/image';
 import { useMousePosition } from '@/hooks/use-mouse-position';
 import { Button } from '@/components/ui/button';
 import { ArrowDown } from 'lucide-react';
-import { useCollection, useDoc, useFirestore } from '@/firebase';
-import { collection, doc } from 'firebase/firestore';
+import { useCollection, useFirestore } from '@/firebase';
+import { collection } from 'firebase/firestore';
 import type { Project } from '@/lib/projects-data';
 import { ICONS } from '@/lib/projects-data';
 import { Loader2 } from 'lucide-react';
@@ -20,10 +21,6 @@ const Hero = () => {
 
   const projectsQuery = firestore ? collection(firestore, 'projects') : null;
   const { data: projectsData, loading: projectsLoading } = useCollection<Project>(projectsQuery);
-
-  const appDetailsRef = firestore ? doc(firestore, 'settings', 'appDetails') : null;
-  const { data: appDetails, loading: appDetailsLoading } = useDoc<{logoUrl?: string}>(appDetailsRef);
-
 
   const parallax = (factor: number) => {
     if (typeof window === 'undefined') return { transform: 'translate(0, 0)' };
@@ -49,22 +46,15 @@ const Hero = () => {
         {/* Central Core / Sun */}
         <div className="z-10">
           <div className={cn(
-              "w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center shadow-[0_0_60px_10px_hsl(var(--primary)/0.3)] animate-pulse-glow",
-              appDetails?.logoUrl && 'w-48 h-48'
+              "w-48 h-48 bg-primary/10 rounded-full flex items-center justify-center shadow-[0_0_60px_10px_hsl(var(--primary)/0.3)] animate-pulse-glow"
             )}>
-              {appDetails?.logoUrl ? (
-                <div className="w-full h-full relative">
-                  <Image src={appDetails.logoUrl} alt="EmityGate Sun" fill style={{ objectFit: 'contain'}} />
-                </div>
-              ) : (
-                <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center shadow-[0_0_40px_hsl(var(--primary)/0.5)]">
-                  <div className="w-8 h-8 bg-primary/30 rounded-full shadow-[0_0_20px_hsl(var(--primary)/0.7)]"></div>
-                </div>
-              )}
+              <div className="w-full h-full relative">
+                <Image src="/logo.jpg" alt="EmityGate Sun" fill style={{ objectFit: 'contain'}} className="rounded-full" />
+              </div>
           </div>
         </div>
 
-        {(projectsLoading || appDetailsLoading) && <Loader2 className="absolute w-16 h-16 text-primary animate-spin" />}
+        {projectsLoading && <Loader2 className="absolute w-16 h-16 text-primary animate-spin" />}
 
         {/* Orbiting Planets */}
         {projectsData?.map((p) => {
