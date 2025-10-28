@@ -1,3 +1,4 @@
+require('dotenv').config();
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -30,6 +31,9 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  env: {
+    GENKIT_FIREBASE_PROJECT_ID: process.env.GENKIT_FIREBASE_PROJECT_ID,
+  }
 };
 
 export default nextConfig;
