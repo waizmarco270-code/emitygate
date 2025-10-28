@@ -5,7 +5,6 @@ import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
 import ClientLayout from '@/components/client-layout';
 
-
 export const metadata: Metadata = {
   title: 'EmityGate Command',
   description: 'Building Tomorrow’s Legends.',
