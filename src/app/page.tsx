@@ -1,10 +1,10 @@
-import HomeClient from "@/components/sections/landing/home-client";
-import PageWrapper from "@/components/page-wrapper";
+import PageWrapper from '@/components/page-wrapper';
+import HomePage from './home-page';
 
 export default function Home() {
   return (
     <PageWrapper>
-      <HomeClient />
+      <HomePage />
     </PageWrapper>
   );
 }

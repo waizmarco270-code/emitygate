@@ -50,27 +50,15 @@ export const FirebaseClientProvider = ({
     return null;
   }, []);
 
-  // If the services are not yet available (e.g., during server-side rendering),
-  // we can return a loading state or null to avoid rendering children that depend on Firebase.
-  // Once the client hydrates, `value` will be populated and the children will render.
-  if (!value) {
-    return (
-        <>
-            <main className="flex-grow">{children}</main>
-        </>
-    );
-  }
 
   return (
     <FirebaseProvider value={value}>
       <FounderConsoleProvider>
-        <>
-            <AppHead />
-            <Header />
-            <main className="flex-grow">{children}</main>
-            <Footer />
-            <FounderConsoleWrapper />
-        </>
+          <AppHead />
+          <Header />
+          <main className="flex-grow">{children}</main>
+          <Footer />
+          <FounderConsoleWrapper />
       </FounderConsoleProvider>
     </FirebaseProvider>
   );
