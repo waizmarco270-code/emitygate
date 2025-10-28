@@ -191,7 +191,17 @@ const TeamMembersTab = () => {
 };
 
 const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project> | null, onSave: (project: Partial<Project>, iconFile?: File) => void, onCancel: () => void }) => {
-    const [formData, setFormData] = useState<Partial<Project>>(project || { name: '', description: '', icon: 'Link', color: 'hsl(207, 90%, 40%)', url: '', tier: 'inner', sizePreset: 'medium', iconImage: '' });
+    const [formData, setFormData] = useState<Partial<Project>>({
+      name: '',
+      description: '',
+      icon: 'Link',
+      color: 'hsl(207, 90%, 40%)',
+      url: '',
+      tier: 'inner',
+      sizePreset: 'medium',
+      iconImage: '',
+      ...project,
+    });
     const [iconFile, setIconFile] = useState<File | undefined>();
     
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -499,3 +509,5 @@ export default function FounderDashboard() {
         </AlertDialog>
     );
 }
+
+    
