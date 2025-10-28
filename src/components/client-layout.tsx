@@ -19,7 +19,7 @@ const createUserProfile = async (firestore: any, user: User) => {
     displayName: user.displayName,
     photoURL: user.photoURL,
     isAdmin: false,
-    isFounder: user.email === 'waizmonazzum270@gmail.com',
+    isFounder: user.uid === '2D5EyrcNOzLCwFrFX1WSbVRH2662',
   };
   await setDoc(userRef, userData, { merge: true });
   return userData;
@@ -80,5 +80,5 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         {children}
       </MainAppContent>
     </FirebaseClientProvider>
-  )
+  );
 }

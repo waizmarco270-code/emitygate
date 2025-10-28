@@ -99,7 +99,7 @@ export default function DashboardPage() {
             displayName: user.displayName,
             photoURL: user.photoURL,
             isAdmin: false,
-            isFounder: user.email === 'waizmonazzum270@gmail.com',
+            isFounder: user.uid === '2D5EyrcNOzLCwFrFX1WSbVRH2662',
           };
           setDoc(userRef, newUserProfile).then(() => {
             setUserProfile(newUserProfile);
