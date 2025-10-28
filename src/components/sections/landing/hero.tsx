@@ -14,6 +14,7 @@ import { ICONS } from '@/lib/projects-data';
 import { Loader2 } from 'lucide-react';
 import GalaxyBackground from './galaxy-background';
 import { cn } from '@/lib/utils';
+import EmityGateLogo from '@/components/icons/emity-gate-logo';
 
 const Hero = () => {
   const position = useMousePosition();
@@ -45,7 +46,7 @@ const Hero = () => {
       <div className="relative w-full h-full flex items-center justify-center" style={parallax(0.01)}>
         {/* Central Core / Sun */}
         <div className="z-10">
-          <div className={cn(
+           <div className={cn(
               "w-48 h-48 bg-primary/10 rounded-full flex items-center justify-center shadow-[0_0_60px_10px_hsl(var(--primary)/0.3)] animate-pulse-glow"
             )}>
               <div className="w-full h-full relative">
@@ -100,7 +101,8 @@ const Hero = () => {
       {/* Foreground Text */}
       <div style={parallax(-0.02)} className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center pointer-events-none">
         <h1 className="font-headline text-5xl md:text-8xl tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400">
-          EmityGate
+          <span className="font-bold text-white">EMITY</span>
+          <span className="font-light text-primary">GATE</span>
         </h1>
         <p className="mt-4 text-lg md:text-2xl text-muted-foreground">
           Building Tomorrow’s Legends.

@@ -1,14 +1,14 @@
 
 'use client';
 
-import Image from 'next/image';
 import { cn } from "@/lib/utils";
 
 const EmityGateLogo = ({ className }: { className?: string }) => {
   return (
-    <div className={cn("relative w-32 h-8", className)}>
-        <Image src="/logo.jpg" alt="EmityGate" fill style={{ objectFit: 'contain' }} />
-    </div>
+    <h1 className={cn("font-headline text-2xl tracking-widest", className)}>
+      <span className="font-bold text-white">EMITY</span>
+      <span className="font-light text-primary">GATE</span>
+    </h1>
   );
 };
 
