@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -20,6 +21,7 @@ import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopu
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address.'),
@@ -80,7 +82,7 @@ export default function LoginForm() {
 
   return (
     <Card className="border-primary/20 shadow-xl shadow-primary/5">
-      <CardContent className="pt-6">
+      <CardContent className="pt-6 space-y-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
@@ -110,21 +112,24 @@ export default function LoginForm() {
               )}
             />
             
-            {error && (
-                <div className="mt-4 p-3 bg-destructive/10 border border-destructive/50 rounded-md text-destructive text-sm flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4" />
-                    <p>{error}</p>
-                </div>
-            )}
-
             <Button type="submit" disabled={isLoading || isGoogleLoading} className="w-full">
               {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
               Login
             </Button>
           </form>
         </Form>
+        
+        {error && (
+            <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Login Failed</AlertTitle>
+                <AlertDescription>
+                    {error}
+                </AlertDescription>
+            </Alert>
+        )}
 
-        <div className="relative my-6">
+        <div className="relative">
             <Separator />
             <span className="absolute left-1/2 -translate-x-1/2 -top-3 bg-card px-2 text-sm text-muted-foreground">OR</span>
         </div>

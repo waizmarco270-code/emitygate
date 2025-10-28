@@ -1,9 +1,9 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { BarChart as BarChartIcon, FileText, Globe, Users, Waypoints, Link as LinkIcon, Pencil, Trash2, PlusCircle, Check, X, HardDrive } from "lucide-react";
+import { BarChart as BarChartIcon, FileText, Globe, Users, Waypoints, Link as LinkIcon, Pencil, Trash2, PlusCircle, HardDrive } from "lucide-react";
 import { Bar, BarChart as RechartsBar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -16,7 +16,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { ICONS, defaultProjects, type Project } from '@/lib/projects-data';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -270,12 +271,13 @@ const ProjectsTab = () => {
     const [isFormOpen, setFormOpen] = useState(false);
     const [editingProject, setEditingProject] = useState<Partial<Project> | null>(null);
     const [isSeedLoading, setSeedLoading] = useState(false);
+    const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
     const handleSaveProject = async (projectData: Partial<Project>) => {
         if (!firestore) return;
         
         const orbitalProperties = getOrbitalProperties(projectData.tier, projectData.sizePreset);
-        const projectToSave: Omit<Project, 'id'> = {
+        const projectToSave = {
             name: projectData.name!,
             description: projectData.description!,
             icon: projectData.icon!,
@@ -286,12 +288,8 @@ const ProjectsTab = () => {
             ...orbitalProperties,
         };
 
-        let docRef;
-        if (projectData.id) {
-            docRef = doc(firestore, 'projects', projectData.id);
-        } else {
-            docRef = doc(collection(firestore, 'projects'));
-        }
+        const id = projectData.id || doc(collection(firestore, 'projects')).id;
+        const docRef = doc(firestore, 'projects', id);
 
         try {
             await setDoc(docRef, projectToSave, { merge: true });
@@ -304,16 +302,16 @@ const ProjectsTab = () => {
         }
     };
 
-    const handleDeleteProject = async (projectId: string) => {
-        if (!firestore) return;
-        if (!confirm("Are you sure you want to remove this project from the cosmos? This action cannot be undone.")) {
-            return;
-        }
+    const confirmDeleteProject = async () => {
+        if (!firestore || !projectToDelete) return;
+        
         try {
-            await deleteDoc(doc(firestore, 'projects', projectId));
-            toast({ title: "Project removed", description: "The project has been removed from the cosmos."});
+            await deleteDoc(doc(firestore, 'projects', projectToDelete.id!));
+            toast({ title: "Project removed", description: `${projectToDelete.name} has been removed from the cosmos.`});
         } catch(e: any) {
             toast({ variant: 'destructive', title: "Delete failed", description: e.message });
+        } finally {
+            setProjectToDelete(null);
         }
     };
     
@@ -388,9 +386,11 @@ const ProjectsTab = () => {
                                                 <Button variant="ghost" size="icon" onClick={() => { setEditingProject(project); setFormOpen(true); }}>
                                                     <Pencil className="h-4 w-4" />
                                                 </Button>
-                                                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteProject(project.id!)}>
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                <AlertDialogTrigger asChild>
+                                                     <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setProjectToDelete(project)}>
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </AlertDialogTrigger>
                                             </TableCell>
                                         </TableRow>
                                     );
@@ -408,6 +408,8 @@ const ProjectsTab = () => {
                     )}
                 </CardContent>
             </Card>
+
+            {/* Edit/Add Dialog */}
             <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
                  <DialogContent className="max-w-3xl">
                     <DialogHeader>
@@ -430,21 +432,38 @@ const ProjectsTab = () => {
 
 export default function FounderDashboard() {
     return (
-        <Tabs defaultValue="overview" className="w-full animate-page-enter">
-            <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto mb-6">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="team">Team</TabsTrigger>
-                <TabsTrigger value="projects">Projects</TabsTrigger>
-            </TabsList>
-            <TabsContent value="overview">
-                <OverviewTab />
-            </TabsContent>
-            <TabsContent value="team">
-                <TeamMembersTab />
-            </TabsContent>
-            <TabsContent value="projects">
-                <ProjectsTab />
-            </TabsContent>
-        </Tabs>
+        <AlertDialog>
+            <Tabs defaultValue="overview" className="w-full animate-page-enter">
+                <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto mb-6">
+                    <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="team">Team</TabsTrigger>
+                    <TabsTrigger value="projects">Projects</TabsTrigger>
+                </TabsList>
+                <TabsContent value="overview">
+                    <OverviewTab />
+                </TabsContent>
+                <TabsContent value="team">
+                    <TeamMembersTab />
+                </TabsContent>
+                <TabsContent value="projects">
+                    <ProjectsTab />
+                </TabsContent>
+            </Tabs>
+            
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure you want to proceed?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently remove the project <span className="font-bold text-foreground">{projectToDelete?.name}</span> from the cosmos.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => setProjectToDelete(null)}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={confirmDeleteProject}>Continue</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+
+        </AlertDialog>
     );
 }
+
