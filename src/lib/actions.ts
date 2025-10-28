@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -38,5 +39,29 @@ export async function reviewApplicationAction(formData: FormData) {
         return { success: false, error: "Validation failed: " + error.errors.map(e => e.message).join(', ') };
     }
     return { success: false, error: 'An unexpected error occurred on the server.' };
+  }
+}
+
+
+const vaultPassphraseSchema = z.string();
+
+export async function checkVaultPassphrase(passphrase: string) {
+  'use server';
+  try {
+    const validatedPassphrase = vaultPassphraseSchema.parse(passphrase);
+    const correctPassphrase = process.env.LEGACY_VAULT_PASSPHRASE;
+
+    if (!correctPassphrase) {
+        console.error("LEGACY_VAULT_PASSPHRASE is not set in .env file");
+        return { success: false, error: 'Server configuration error.' };
+    }
+
+    if (validatedPassphrase === correctPassphrase) {
+        return { success: true, error: null };
+    } else {
+        return { success: false, error: 'ACCESS DENIED' };
+    }
+  } catch (error) {
+    return { success: false, error: 'An unexpected error occurred.' };
   }
 }

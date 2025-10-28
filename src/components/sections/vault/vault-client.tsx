@@ -1,12 +1,12 @@
+
 'use client';
 
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Lock, Unlock, Shield, FileText, Milestone, Archive } from 'lucide-react';
+import { Lock, Unlock, Shield, FileText, Milestone, Archive, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-const CORRECT_PASSPHRASE = 'A PURE MASTERPIECE IS ALWAYS A PURE MASTERPIECE 🌹';
+import { checkVaultPassphrase } from '@/lib/actions';
 
 const SciFiLock = ({ unlocked }: { unlocked: boolean }) => (
     <div className="relative w-48 h-48 flex items-center justify-center">
@@ -43,16 +43,21 @@ const VaultContent = () => (
 export default function VaultClient() {
   const [passphrase, setPassphrase] = useState('');
   const [unlocked, setUnlocked] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleUnlock = () => {
-    if (passphrase === CORRECT_PASSPHRASE) {
+
+  const handleUnlock = async () => {
+    setIsLoading(true);
+    setError(null);
+    const response = await checkVaultPassphrase(passphrase);
+    if (response.success) {
       setUnlocked(true);
-      setError(false);
     } else {
-      setError(true);
-      setTimeout(() => setError(false), 1000);
+      setError(response.error || 'ACCESS DENIED');
+      setTimeout(() => setError(null), 1500);
     }
+    setIsLoading(false);
   };
   
   if (unlocked) {
@@ -73,12 +78,13 @@ export default function VaultClient() {
                 onChange={(e) => setPassphrase(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
                 className="text-center"
+                disabled={isLoading}
             />
-            <Button onClick={handleUnlock} className="w-full">
-                <Unlock className="mr-2 h-4 w-4" />
+            <Button onClick={handleUnlock} className="w-full" disabled={isLoading}>
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Unlock className="mr-2 h-4 w-4" />}
                 Attempt Access
             </Button>
-            {error && <p className="text-destructive text-sm">ACCESS DENIED</p>}
+            {error && <p className="text-destructive text-sm mt-2">{error}</p>}
         </div>
     </div>
   );
