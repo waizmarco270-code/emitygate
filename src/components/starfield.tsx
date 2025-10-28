@@ -15,7 +15,7 @@ const Starfield: React.FC<StarfieldProps> = ({
   starCount = 1000,
   starColor = [255, 255, 255],
   speedFactor = 0.05,
-  backgroundColor = 'black',
+  backgroundColor,
   className,
   ...rest
 }) => {
@@ -66,8 +66,13 @@ const Starfield: React.FC<StarfieldProps> = ({
     let animationFrameId: number;
 
     const render = () => {
-      context.fillStyle = backgroundColor;
-      context.fillRect(0, 0, dimensions.width, dimensions.height);
+      if (backgroundColor) {
+        context.fillStyle = backgroundColor;
+        context.fillRect(0, 0, dimensions.width, dimensions.height);
+      } else {
+        context.clearRect(0, 0, dimensions.width, dimensions.height);
+      }
+
 
       const cx = dimensions.width / 2;
       const cy = dimensions.height / 2;
