@@ -1,20 +1,12 @@
+
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { useMousePosition } from '@/hooks/use-mouse-position';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 import { ArrowDown } from 'lucide-react';
-
-const projects = [
-  { name: 'Zenix', color: 'hsl(180, 80%, 60%)', size: 60, orbit: 180, angle: 30, speed: 0.8 },
-  { name: 'NotesGate', color: 'hsl(220, 80%, 70%)', size: 80, orbit: 280, angle: 110, speed: 0.6 },
-  { name: 'LedGate', color: 'hsl(300, 80%, 70%)', size: 50, orbit: 220, angle: 190, speed: 0.7 },
-  { name: 'MindMate', color: 'hsl(40, 80%, 60%)', size: 90, orbit: 360, angle: 260, speed: 0.5 },
-  { name: 'PlayGate', color: 'hsl(120, 80%, 60%)', size: 70, orbit: 320, angle: 330, speed: 0.65 },
-  { name: 'GlowPhy', color: 'hsl(270, 70%, 75%)', size: 65, orbit: 250, angle: 70, speed: 0.9 },
-  { name: 'Marco Ai', color: 'hsl(30, 100%, 50%)', size: 100, orbit: 400, angle: 150, speed: 0.4 },
-];
+import { projectsData } from '@/lib/projects-data';
 
 const Hero = () => {
   const position = useMousePosition();
@@ -51,15 +43,19 @@ const Hero = () => {
         </div>
 
         {/* Orbiting Planets */}
-        {projects.map((p, i) => {
+        {projectsData.map((p, i) => {
           const angle = p.angle + time * p.speed;
           const x = Math.cos(angle * Math.PI / 180) * p.orbit;
           const y = Math.sin(angle * Math.PI / 180) * p.orbit;
+          const Icon = p.icon;
 
           return (
-            <div
-              key={p.name}
-              className="absolute transition-transform duration-500 ease-out"
+            <Link
+              key={p.id}
+              href={p.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute transition-transform duration-500 ease-out z-20"
               style={{
                 ...parallax(0.01 + i * 0.005),
                 transform: `translate(${x}px, ${y}px) ${parallax(0.01 + i * 0.005).transform}`,
@@ -74,9 +70,9 @@ const Hero = () => {
                   boxShadow: `0 0 20px ${p.color}`,
                 }}
               >
-                <span className="font-headline text-xs text-background/80">{p.name}</span>
+                <Icon className="text-white" style={{width: p.size*0.5, height: p.size*0.5 }} />
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
@@ -95,7 +91,7 @@ const Hero = () => {
       </div>
 
        <div className="absolute bottom-10 z-30">
-          <Button variant="ghost" className="text-muted-foreground animate-bounce" asChild>
+          <Button variant="ghost" className="text-muted-foreground animate-bounce pointer-events-auto" asChild>
               <Link href="#stats">
                   <ArrowDown className="mr-2 h-4 w-4" /> Explore
               </Link>

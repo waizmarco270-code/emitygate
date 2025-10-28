@@ -22,7 +22,6 @@ import {
 import { useRouter } from 'next/navigation';
 import type { UserProfile } from '@/lib/types';
 import { doc } from 'firebase/firestore';
-import FounderConsole from '../founder-console';
 
 const Header = () => {
   const { user, loading } = useUser();
@@ -30,33 +29,20 @@ const Header = () => {
   const userProfileRef = user && firestore ? doc(firestore, 'users', user.uid) : null;
   const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
   const router = useRouter();
-  const auth = getAuth();
-
-  const [isConsoleOpen, setIsConsoleOpen] = useState(false);
-
+  
+  const [auth, setAuth] = useState<any>(null);
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.shiftKey && event.key === 'E') {
-        event.preventDefault();
-        if (userProfile?.isFounder) {
-          setIsConsoleOpen(prev => !prev);
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [userProfile?.isFounder]);
+      setAuth(getAuth());
+  }, []);
 
   const handleSignOut = async () => {
-    await signOut(auth);
-    router.push('/');
+    if (auth) {
+      await signOut(auth);
+      router.push('/');
+    }
   };
 
   return (
-    <>
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 max-w-screen-2xl items-center">
         <div className="mr-4 hidden md:flex">
@@ -143,8 +129,6 @@ const Header = () => {
         </div>
       </div>
     </header>
-    <FounderConsole isOpen={isConsoleOpen} onClose={() => setIsConsoleOpen(false)} userProfile={userProfile} />
-    </>
   );
 };
 

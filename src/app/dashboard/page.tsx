@@ -9,9 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
 import { useUser, useFirestore, useDoc } from "@/firebase";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import type { UserProfile } from "@/lib/types";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import FounderDashboard from "@/components/sections/dashboard/founder-dashboard";
 import { Loader2 } from "lucide-react";
 
@@ -87,7 +87,7 @@ export default function DashboardPage() {
   const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>(userProfileRef);
 
   useEffect(() => {
-    if (user && !profileLoading && !userProfile) {
+    if (user && !profileLoading && !userProfile && firestore) {
         const userRef = doc(firestore, "users", user.uid);
         const newUserProfile: Omit<UserProfile, 'id'> = {
             uid: user.uid,

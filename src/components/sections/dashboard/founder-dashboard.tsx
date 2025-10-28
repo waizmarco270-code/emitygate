@@ -2,7 +2,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { AreaChart, BarChart as BarChartIcon, FileText, Globe, Users, Waypoints, Loader2 } from "lucide-react";
+import { AreaChart, BarChart as BarChartIcon, FileText, Globe, Users, Waypoints, Link as LinkIcon, Pencil, HardDrive } from "lucide-react";
 import { Bar, BarChart as RechartsBar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -12,13 +12,17 @@ import { collection } from "firebase/firestore";
 import type { UserProfile } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { projectsData, type Project } from "@/lib/projects-data";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Loader2 } from "lucide-react";
 
-const data = [
+const engagementData = [
     { name: 'Zenix', value: 4000 },
-    { name: 'WaizGPT', value: 3000 },
+    { name: 'NotesGate', value: 3000 },
     { name: 'LedGate', value: 2000 },
-    { name: 'WaizVerse', value: 2780 },
-    { name: 'EmityLabs', value: 1890 },
+    { name: 'MindMate', value: 2780 },
+    { name: 'PlayGate', value: 1890 },
 ];
 
 const OverviewTab = () => (
@@ -37,10 +41,10 @@ const OverviewTab = () => (
         <Card className="lg:col-span-1">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
-                <AreaChart className="h-4 w-4 text-muted-foreground" />
+                <HardDrive className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-4xl font-bold font-headline">5</div>
+                <div className="text-4xl font-bold font-headline">{projectsData.length}</div>
                 <p className="text-xs text-muted-foreground">2 initiatives in R&D</p>
             </CardContent>
         </Card>
@@ -75,7 +79,7 @@ const OverviewTab = () => (
             </CardHeader>
             <CardContent className="pl-2">
                 <ResponsiveContainer width="100%" height={300}>
-                     <RechartsBar data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                     <RechartsBar data={engagementData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.5)" />
                         <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
                         <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12}/>
@@ -106,7 +110,7 @@ const OverviewTab = () => (
                 <div className="p-4 bg-muted/50 rounded-lg border text-sm">
                     <p className="font-mono text-primary/80">&gt; Initiate 'Project Chronos' directive.</p>
                     <p className="font-mono text-muted-foreground mt-2">&gt; Security council meeting scheduled for 2024-Q4.</p>
-                    <p className="font-mono text-muted-foreground mt-2">&gt; WaizGPT sentiment analysis shows positive trend in user adoption.</p>
+                    <p className="font-mono text-muted-foreground mt-2">&gt; NotesGate sentiment analysis shows positive trend in user adoption.</p>
                 </div>
             </CardContent>
         </Card>
@@ -115,7 +119,7 @@ const OverviewTab = () => (
 
 const TeamMembersTab = () => {
     const firestore = useFirestore();
-    const usersQuery = collection(firestore, 'users');
+    const usersQuery = firestore ? collection(firestore, 'users') : null;
     const { data: users, loading, error } = useCollection<UserProfile>(usersQuery);
 
     if (loading) {
@@ -168,18 +172,69 @@ const TeamMembersTab = () => {
     )
 }
 
+const ProjectsTab = () => (
+    <Card>
+        <CardHeader>
+            <CardTitle>Project Constellation</CardTitle>
+            <CardDescription>Manage the projects orbiting the EmityGate core.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>Project</TableHead>
+                        <TableHead>URL</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {projectsData.map((project) => {
+                        const Icon = project.icon;
+                        return (
+                            <TableRow key={project.id}>
+                                <TableCell>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: project.color }}>
+                                            <Icon className="w-5 h-5 text-white" />
+                                        </div>
+                                        <span className="font-medium">{project.name}</span>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <Link href={project.url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+                                        {project.url} <LinkIcon className="w-4 h-4" />
+                                    </Link>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <Button variant="ghost" size="icon" disabled>
+                                        <Pencil className="h-4 w-4" />
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        );
+                    })}
+                </TableBody>
+            </Table>
+        </CardContent>
+    </Card>
+);
+
 export default function FounderDashboard() {
     return (
         <Tabs defaultValue="overview" className="w-full animate-page-enter">
-            <TabsList className="grid w-full grid-cols-2 max-w-sm mx-auto mb-6">
+            <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto mb-6">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="team">Team</TabsTrigger>
+                <TabsTrigger value="projects">Projects</TabsTrigger>
             </TabsList>
             <TabsContent value="overview">
                 <OverviewTab />
             </TabsContent>
             <TabsContent value="team">
                 <TeamMembersTab />
+            </TabsContent>
+            <TabsContent value="projects">
+                <ProjectsTab />
             </TabsContent>
         </Tabs>
     );
