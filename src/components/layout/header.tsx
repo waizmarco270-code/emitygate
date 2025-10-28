@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -22,7 +22,7 @@ import {
 import { useRouter } from 'next/navigation';
 import type { UserProfile } from '@/lib/types';
 import { doc } from 'firebase/firestore';
-import FounderConsole from '../founder-console';
+import { useFounderConsole } from '@/context/founder-console-context';
 
 const Header = () => {
   const { user, loading } = useUser();
@@ -31,12 +31,8 @@ const Header = () => {
   const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
   const router = useRouter();
   
-  const [auth, setAuth] = useState<any>(null);
-  useEffect(() => {
-      setAuth(getAuth());
-  }, []);
-
-  const [isConsoleOpen, setIsConsoleOpen] = useState(false);
+  const auth = getAuth();
+  const { setIsConsoleOpen } = useFounderConsole();
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -52,7 +48,7 @@ const Header = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [userProfile?.isFounder]);
+  }, [userProfile?.isFounder, setIsConsoleOpen]);
 
 
   const handleSignOut = async () => {
@@ -150,7 +146,6 @@ const Header = () => {
           </div>
         </div>
       </header>
-      <FounderConsole isOpen={isConsoleOpen} onClose={() => setIsConsoleOpen(false)} userProfile={userProfile} />
     </>
   );
 };

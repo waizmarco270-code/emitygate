@@ -5,6 +5,10 @@ import { useMemo } from 'react';
 import { firebaseConfig } from '@/firebase/config';
 import { initializeFirebase, FirebaseServices } from '@/firebase';
 import { FirebaseProvider } from './provider';
+import Header from '@/components/layout/header';
+import Footer from '@/components/layout/footer';
+import { FounderConsoleProvider } from '@/context/founder-console-context';
+import FounderConsoleWrapper from '@/components/founder-console-wrapper';
 
 // This is a singleton pattern to ensure Firebase is initialized only once.
 let firebaseServices: FirebaseServices | null = null;
@@ -33,7 +37,14 @@ export const FirebaseClientProvider = ({
 
   return (
     <FirebaseProvider value={value}>
-      {children}
+      <FounderConsoleProvider>
+        <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">{children}</main>
+            <Footer />
+            <FounderConsoleWrapper />
+        </div>
+      </FounderConsoleProvider>
     </FirebaseProvider>
   );
 };

@@ -4,6 +4,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Globe, Cpu, Film } from 'lucide-react';
 import type { UserProfile } from '@/lib/types';
+import { useFounderConsole } from '@/context/founder-console-context';
 
 const WorldMap = () => (
     <div className="relative aspect-[2/1] w-full overflow-hidden rounded-lg bg-background/20 p-4">
@@ -25,11 +26,13 @@ const WorldMap = () => (
 );
 
 
-export default function FounderConsole({ isOpen, onClose, userProfile }: { isOpen: boolean; onClose: () => void; userProfile: UserProfile | null }) {
-  if (!isOpen || !userProfile?.isFounder) return null;
+export default function FounderConsole({ userProfile }: { userProfile: UserProfile | null }) {
+  const { isConsoleOpen, setIsConsoleOpen } = useFounderConsole();
+
+  if (!userProfile?.isFounder) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isConsoleOpen} onOpenChange={setIsConsoleOpen}>
         <DialogContent className="max-w-4xl h-[80vh] bg-black/80 backdrop-blur-md border-primary/50 text-primary">
             <DialogHeader>
                 <DialogTitle className="font-headline text-2xl text-primary tracking-widest">

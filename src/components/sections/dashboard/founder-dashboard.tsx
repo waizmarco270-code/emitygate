@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { BarChart as BarChartIcon, FileText, Globe, Users, Waypoints, Link as LinkIcon, Pencil, Trash2, PlusCircle, HardDrive } from "lucide-react";
+import { BarChart as BarChartIcon, FileText, Globe, Users, Waypoints, Link as LinkIcon, Pencil, Trash2, PlusCircle, HardDrive, Terminal } from "lucide-react";
 import { Bar, BarChart as RechartsBar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -24,6 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { getOrbitalProperties } from '@/lib/orbital-mechanics';
+import { useFounderConsole } from '@/context/founder-console-context';
 
 const engagementData = [
     { name: 'Zenix', value: 4000 },
@@ -37,6 +38,7 @@ const OverviewTab = () => {
     const firestore = useFirestore();
     const projectsQuery = firestore ? collection(firestore, 'projects') : null;
     const { data: projectsData } = useCollection<Project>(projectsQuery);
+    const { setIsConsoleOpen } = useFounderConsole();
 
     return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -123,6 +125,10 @@ const OverviewTab = () => {
                     <p className="font-mono text-muted-foreground mt-2">> Security council meeting scheduled for 2024-Q4.</p>
                     <p className="font-mono text-muted-foreground mt-2">> NotesGate sentiment analysis shows positive trend in user adoption.</p>
                 </div>
+                 <Button onClick={() => setIsConsoleOpen(true)} className="w-full">
+                    <Terminal className="mr-2 h-4 w-4" />
+                    Open Founder Console
+                </Button>
             </CardContent>
         </Card>
     </div>
@@ -469,5 +475,3 @@ export default function FounderDashboard() {
         </AlertDialog>
     );
 }
-
-    
