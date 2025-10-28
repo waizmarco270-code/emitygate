@@ -8,23 +8,6 @@ import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { initializeApp, getApps } from 'firebase/app';
 import { firebaseConfig } from '@/firebase/config';
 
-// Initialize a temporary app instance for server-side fetching ONLY if one doesn't exist.
-const tempApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-const db = getFirestore(tempApp);
-
-async function getAppSettings() {
-  try {
-    const appDetailsRef = doc(db, 'settings', 'appDetails');
-    const appDetailsSnap = await getDoc(appDetailsRef);
-    if (appDetailsSnap.exists()) {
-      return appDetailsSnap.data();
-    }
-  } catch (error) {
-    console.error("Error fetching app settings on server:", error);
-  }
-  return { faviconUrl: null };
-}
-
 export const metadata: Metadata = {
   title: 'EmityGate Command',
   description: 'Building Tomorrow’s Legends.',
@@ -35,6 +18,24 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  
+  // Initialize a temporary app instance for server-side fetching ONLY if one doesn't exist.
+  const tempApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+  const db = getFirestore(tempApp);
+
+  async function getAppSettings() {
+    try {
+      const appDetailsRef = doc(db, 'settings', 'appDetails');
+      const appDetailsSnap = await getDoc(appDetailsRef);
+      if (appDetailsSnap.exists()) {
+        return appDetailsSnap.data();
+      }
+    } catch (error) {
+      console.error("Error fetching app settings on server:", error);
+    }
+    return { faviconUrl: null };
+  }
+  
   const settings = await getAppSettings();
 
   return (
