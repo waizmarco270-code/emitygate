@@ -8,6 +8,11 @@ import FounderConsole from '@/components/founder-console';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -25,12 +30,12 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   return (
     <>
-      <Header />
+      {isClient && <Header />}
       <div className="min-h-screen">
         {children}
       </div>
-      <Footer />
-      <FounderConsole isOpen={isConsoleOpen} onClose={() => setIsConsoleOpen(false)} />
+      {isClient && <Footer />}
+      {isClient && <FounderConsole isOpen={isConsoleOpen} onClose={() => setIsConsoleOpen(false)} />}
     </>
   );
 }

@@ -4,10 +4,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
 import { FirebaseClientProvider } from '@/firebase';
-import dynamic from 'next/dynamic';
-
-// Dynamically import the ClientLayout with SSR turned off
-const ClientLayout = dynamic(() => import('@/components/client-layout'), { ssr: false });
+import ClientLayout from '@/components/client-layout';
 
 export const metadata: Metadata = {
   title: 'EmityGate Command',
