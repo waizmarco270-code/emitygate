@@ -1,9 +1,12 @@
+
 'use client';
 
 import { useMemo } from 'react';
 import { firebaseConfig } from '@/firebase/config';
 import { initializeFirebase, FirebaseServices } from '@/firebase';
 import { FirebaseProvider } from './provider';
+import Header from '@/components/layout/header';
+import Footer from '@/components/layout/footer';
 
 let firebaseServices: FirebaseServices;
 
@@ -21,5 +24,13 @@ export const FirebaseClientProvider = ({
     return firebaseServices;
   }, []);
 
-  return <FirebaseProvider value={value}>{children}</FirebaseProvider>;
+  return (
+    <FirebaseProvider value={value}>
+        <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow">{children}</main>
+            <Footer />
+        </div>
+    </FirebaseProvider>
+  );
 };

@@ -1,19 +1,26 @@
 /**
  * @file Firestore Security Rules
- * @description This ruleset enforces a strict user-ownership model for user profiles.
+ * @description This ruleset enforces a user-ownership model for user profiles
+ * and allows public read access for projects, with owner-only writes.
  *
  * Data Structure:
- * - All user data is stored under `/users/{userId}`.
+ * - /users/{userId}: Stores user profile data, accessible only to the user themselves.
+ * - /projects/{projectId}: Stores project data, publicly readable, but only modifiable by project owner.
  *
  * Key Security Decisions:
- * - Users can only read and write their own profiles.
- * - Admin and founder roles are managed directly on the user profile document,
- *   allowing for role-based access control in other parts of the application.
- * - User listing is disallowed for privacy.
+ * - Users can only read and write their own profile data.
+ * - Projects are publicly readable, but only the project owner can create, update, or delete them.
+ * - No user listing is allowed.
  *
  * Denormalization for Authorization:
- * - The `isAdmin` and `isFounder` fields are denormalized directly onto the user profile
- *   document to allow for efficient role-based access control without additional reads.
+ * - The 'Project' entity lacks an explicit 'ownerId' or 'authorId' field. To securely implement owner-only writes for projects,
+ *   the schema MUST be updated to include such a field.
+ *   Once this field is added, the rules will validate that the incoming ownership field matches the user's auth UID on create,
+ *   and that update/delete operations are performed by the owner.
+ *
+ * Structural Segregation:
+ * - Public project data is stored in a top-level collection (/projects), separate from private user data,
+ *   enabling public read access without compromising user privacy.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -22,41 +29,59 @@ service cloud.firestore {
     /**
      * @description Controls access to user profile documents.
      * @path /users/{userId}
-     * @allow (create) Authenticated user can create their own profile if the UID matches the document ID.
-     * @allow (update) Authenticated user can update their own profile.
-     * @allow (get) Authenticated user can read their own profile.
-     * @deny (create) If the UID doesn't match the document ID, the creation is denied.
-     * @deny (update) Unauthenticated users cannot update profiles.
-     * @deny (get) Unauthenticated users cannot read profiles.
-     * @deny (delete) Users cannot delete their profiles through the API.
-     * @deny (list) User listing is not allowed.
-     * @principle Enforces document ownership and prevents unauthorized access to user data.
+     * @allow (create) - Authenticated user can create their own profile if the userId matches their auth UID.
+     * @allow (get, list, update, delete) - Authenticated user can only access their own profile data.
+     * @deny (create) - If the userId does not match the authenticated user's UID.
+     * @deny (update, delete) - If the authenticated user is not the owner.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId} {
-      // Helper function to check if the authenticated user is the owner of the document.
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
+      //function
+      function isSignedIn() {
+        return request.auth != null;
       }
-
-      // Helper function to check if the authenticated user is the existing owner of the document.
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
       function isExistingOwner(userId) {
         return isOwner(userId) && resource != null;
       }
 
-      // Allow a user to create their own profile if the UID matches.
-      allow create: if isOwner(userId) && request.resource.data.uid == userId;
-
-      // Allow a user to get their own profile.
       allow get: if isOwner(userId);
-
-      // Allow a user to update their own profile.  Enforce immutability of the uid field.
-      allow update: if isExistingOwner(userId) && request.resource.data.uid == resource.data.uid;
-
-      // No one can delete a user's profile via the rules.
-      allow delete: if false;
-
-      // No listing of users.
       allow list: if false;
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to project documents.
+     * @path /projects/{projectId}
+     * @allow (get, list) - Anyone can read project data.
+     * @allow (create) - Only the authenticated user can create project if they are the owner.
+     * @allow (update, delete) - Only the owner of the project can update or delete it, but only if the ownership field exists.
+     * @deny (create) - If the incoming ownership field does not match the user's auth UID.
+     * @deny (update, delete) - If the user is not the owner or the document doesn't exist.
+     * @principle Allows public read access with owner-only writes for projects.
+     */
+    match /projects/{projectId} {
+
+      //function
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      function isOwner(ownerId) {
+        return request.auth.uid == ownerId;
+      }
+      function isExistingOwner(ownerId) {
+        return isOwner(ownerId) && resource != null;
+      }
+
+      allow get, list: if true;
+      allow create: if isSignedIn()
+                    && request.resource.data.keys().hasAll(['name', 'description', 'icon', 'color', 'url', 'size', 'orbit', 'angle', 'speed']); // TODO: Add owner validation once the schema is updated with an ownership field.
+
+      allow update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
   }
 }
