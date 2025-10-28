@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Bar,
   BarChart,
@@ -32,7 +33,9 @@ import {
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Edit, Trash } from 'lucide-react';
+import { PlusCircle, Edit, Trash, Loader2, Sparkles } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { summarizeTeamFeedback, SummarizeTeamFeedbackOutput } from '@/ai/flows/summarize-team-feedback';
 
 const chartData = [
   { month: 'January', users: 186 },
@@ -136,14 +139,72 @@ const TeamTab = () => (
     </Card>
 );
 
+const FeedbackTab = () => {
+    const [feedback, setFeedback] = useState('');
+    const [summary, setSummary] = useState<SummarizeTeamFeedbackOutput | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleSummarize = async () => {
+        if (!feedback.trim()) {
+            setError("Feedback can't be empty.");
+            return;
+        }
+        setIsLoading(true);
+        setError(null);
+        setSummary(null);
+        try {
+            const result = await summarizeTeamFeedback({ feedback });
+            setSummary(result);
+        } catch (e: any) {
+            setError(e.message || 'An error occurred while summarizing feedback.');
+        }
+        setIsLoading(false);
+    };
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>AI Feedback Summarizer</CardTitle>
+                <CardDescription>Paste raw team feedback to generate a concise summary.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <Textarea
+                    placeholder="Paste team feedback here..."
+                    rows={10}
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    disabled={isLoading}
+                />
+                <Button onClick={handleSummarize} disabled={isLoading} className="w-full">
+                    {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                    Summarize Feedback
+                </Button>
+                {error && <p className="text-destructive text-sm">{error}</p>}
+                {summary && (
+                    <Card className="bg-background/50">
+                        <CardHeader>
+                            <CardTitle>Summary</CardTitle>
+                        </CardHeader>
+                        <CardContent className="prose prose-sm prose-invert max-w-none">
+                            <p>{summary.summary}</p>
+                        </CardContent>
+                    </Card>
+                )}
+            </CardContent>
+        </Card>
+    );
+};
+
 
 export default function AdminDashboard() {
   return (
     <Tabs defaultValue="analytics" className="w-full">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="analytics">Analytics</TabsTrigger>
         <TabsTrigger value="team">Team Members</TabsTrigger>
         <TabsTrigger value="projects">Project Monitoring</TabsTrigger>
+        <TabsTrigger value="feedback">Feedback</TabsTrigger>
         <TabsTrigger value="announcements">Announcements</TabsTrigger>
       </TabsList>
       <TabsContent value="analytics" className="mt-4">
@@ -157,6 +218,9 @@ export default function AdminDashboard() {
               <CardHeader><CardTitle>Projects</CardTitle></CardHeader>
               <CardContent><p>Project monitoring interface coming soon.</p></CardContent>
           </Card>
+      </TabsContent>
+       <TabsContent value="feedback" className="mt-4">
+        <FeedbackTab />
       </TabsContent>
        <TabsContent value="announcements" className="mt-4">
           <Card>
