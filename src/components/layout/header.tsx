@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -21,6 +22,7 @@ import {
 import { useRouter } from 'next/navigation';
 import type { UserProfile } from '@/lib/types';
 import { doc } from 'firebase/firestore';
+import FounderConsole from '../founder-console';
 
 const Header = () => {
   const { user, loading } = useUser();
@@ -30,12 +32,31 @@ const Header = () => {
   const router = useRouter();
   const auth = getAuth();
 
+  const [isConsoleOpen, setIsConsoleOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.shiftKey && event.key === 'E') {
+        event.preventDefault();
+        if (userProfile?.isFounder) {
+          setIsConsoleOpen(prev => !prev);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [userProfile?.isFounder]);
+
   const handleSignOut = async () => {
     await signOut(auth);
     router.push('/');
   };
 
   return (
+    <>
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 max-w-screen-2xl items-center">
         <div className="mr-4 hidden md:flex">
@@ -122,6 +143,8 @@ const Header = () => {
         </div>
       </div>
     </header>
+    <FounderConsole isOpen={isConsoleOpen} onClose={() => setIsConsoleOpen(false)} userProfile={userProfile} />
+    </>
   );
 };
 

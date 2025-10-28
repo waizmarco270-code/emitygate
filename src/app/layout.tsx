@@ -31,9 +31,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <FirebaseClientProvider>
-            <ClientLayout>
-              {children}
-            </ClientLayout>
+            <ClientLayout>{children}</ClientLayout>
           </FirebaseClientProvider>
           <Toaster />
         </ThemeProvider>

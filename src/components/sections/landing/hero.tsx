@@ -8,10 +8,12 @@ import { ArrowDown } from 'lucide-react';
 
 const projects = [
   { name: 'Zenix', color: 'hsl(180, 80%, 60%)', size: 60, orbit: 180, angle: 30, speed: 0.8 },
-  { name: 'WaizGPT', color: 'hsl(220, 80%, 70%)', size: 80, orbit: 280, angle: 110, speed: 0.6 },
+  { name: 'NotesGate', color: 'hsl(220, 80%, 70%)', size: 80, orbit: 280, angle: 110, speed: 0.6 },
   { name: 'LedGate', color: 'hsl(300, 80%, 70%)', size: 50, orbit: 220, angle: 190, speed: 0.7 },
-  { name: 'WaizVerse', color: 'hsl(40, 80%, 60%)', size: 90, orbit: 360, angle: 260, speed: 0.5 },
-  { name: 'EmityLabs', color: 'hsl(120, 80%, 60%)', size: 70, orbit: 320, angle: 330, speed: 0.65 },
+  { name: 'MindMate', color: 'hsl(40, 80%, 60%)', size: 90, orbit: 360, angle: 260, speed: 0.5 },
+  { name: 'PlayGate', color: 'hsl(120, 80%, 60%)', size: 70, orbit: 320, angle: 330, speed: 0.65 },
+  { name: 'GlowPhy', color: 'hsl(270, 70%, 75%)', size: 65, orbit: 250, angle: 70, speed: 0.9 },
+  { name: 'Marco Ai', color: 'hsl(30, 100%, 50%)', size: 100, orbit: 400, angle: 150, speed: 0.4 },
 ];
 
 const Hero = () => {
