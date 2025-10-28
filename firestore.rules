@@ -4,84 +4,69 @@
  * and allows public read access for projects, with owner-only writes.
  *
  * Data Structure:
- * - /users/{userId}: Stores user profile data, accessible only to the user themselves.
- * - /projects/{projectId}: Stores project data, publicly readable, but only modifiable by project owner.
+ * - /users/{userId}: Stores public user profile data.
+ * - /projects/{projectId}: Stores project details.
  *
  * Key Security Decisions:
- * - Users can only read and write their own profile data.
- * - Projects are publicly readable, but only the project owner can create, update, or delete them.
- * - No user listing is allowed.
+ * - User profiles are strictly owned by the user with matching user ID.
+ * - Projects are publicly readable, but only owners can create, update, or delete them.
  *
  * Denormalization for Authorization:
- * - The 'Project' entity lacks an explicit 'ownerId' or 'authorId' field. To securely implement owner-only writes for projects,
- *   the schema MUST be updated to include such a field.
- *   Once this field is added, the rules will validate that the incoming ownership field matches the user's auth UID on create,
- *   and that update/delete operations are performed by the owner.
+ * - Projects do not currently have an ownerId field.
  *
  * Structural Segregation:
- * - Public project data is stored in a top-level collection (/projects), separate from private user data,
- *   enabling public read access without compromising user privacy.
+ * - There is no segregation between public and private data.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to user profile documents.
+     * @description Controls access to user profiles.
      * @path /users/{userId}
-     * @allow (create) - Authenticated user can create their own profile if the userId matches their auth UID.
-     * @allow (get, list, update, delete) - Authenticated user can only access their own profile data.
-     * @deny (create) - If the userId does not match the authenticated user's UID.
-     * @deny (update, delete) - If the authenticated user is not the owner.
-     * @principle Enforces document ownership for writes.
+     * @allow (create) User with matching ID can create their profile.
+     * @allow (get, list, update, delete) User with matching ID can access their profile.
+     * @deny (create) User cannot create a profile with an ID that doesn't match their own.
+     * @deny (get, list, update, delete) Other users cannot access a profile.
+     * @principle Enforces document ownership for all operations.
      */
     match /users/{userId} {
-      //function
       function isSignedIn() {
         return request.auth != null;
       }
+
       function isOwner(userId) {
         return request.auth.uid == userId;
       }
+
       function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+          return isOwner(userId) && resource != null;
       }
 
       allow get: if isOwner(userId);
-      allow list: if false;
+      allow list: if isOwner(userId);
       allow create: if isOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to project documents.
+     * @description Controls access to projects.
      * @path /projects/{projectId}
-     * @allow (get, list) - Anyone can read project data.
-     * @allow (create) - Only the authenticated user can create project if they are the owner.
-     * @allow (update, delete) - Only the owner of the project can update or delete it, but only if the ownership field exists.
-     * @deny (create) - If the incoming ownership field does not match the user's auth UID.
-     * @deny (update, delete) - If the user is not the owner or the document doesn't exist.
-     * @principle Allows public read access with owner-only writes for projects.
+     * @allow (get, list) Any user can read project details.
+     * @allow (create, update, delete) Only the project owner can modify or delete a project.
+     * @deny (create) Non-owners cannot create projects.
+     * @deny (update, delete) Non-owners cannot modify or delete projects.
+     * @principle Allows public read access with owner-only writes.
      */
     match /projects/{projectId} {
-
-      //function
       function isSignedIn() {
         return request.auth != null;
       }
-      function isOwner(ownerId) {
-        return request.auth.uid == ownerId;
-      }
-      function isExistingOwner(ownerId) {
-        return isOwner(ownerId) && resource != null;
-      }
 
+      // CRITICAL: Cannot implement owner-only writes. The 'Project' entity is missing an 'ownerId' or 'authorId' field.
       allow get, list: if true;
-      allow create: if isSignedIn()
-                    && request.resource.data.keys().hasAll(['name', 'description', 'icon', 'color', 'url', 'size', 'orbit', 'angle', 'speed']); // TODO: Add owner validation once the schema is updated with an ownership field.
-
-      allow update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
   }
 }
