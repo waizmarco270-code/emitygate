@@ -8,8 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
-import { useUser, useFirestore } from "@/firebase";
-import { doc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore";
+import { useUser, useFirestore, useDoc } from "@/firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import type { UserProfile } from "@/lib/types";
 import { useEffect, useState } from "react";
 import FounderDashboard from "@/components/sections/dashboard/founder-dashboard";
@@ -80,41 +80,30 @@ const StandardDashboard = () => (
 
 
 export default function DashboardPage() {
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
   const firestore = useFirestore();
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  
+  const userProfileRef = (user && firestore) ? doc(firestore, "users", user.uid) : null;
+  const { data: userProfile, loading: profileLoading } = useDoc<UserProfile>(userProfileRef);
 
   useEffect(() => {
-    if (user && firestore) {
-      const userRef = doc(firestore, "users", user.uid);
-      const unsub = onSnapshot(userRef, (doc) => {
-        if (doc.exists()) {
-          setUserProfile(doc.data() as UserProfile);
-        } else {
-          // Profile doesn't exist, so let's create it.
-          const newUserProfile: UserProfile = {
+    if (user && !profileLoading && !userProfile) {
+        const userRef = doc(firestore, "users", user.uid);
+        const newUserProfile: Omit<UserProfile, 'id'> = {
             uid: user.uid,
             email: user.email,
             displayName: user.displayName,
             photoURL: user.photoURL,
             isAdmin: false,
             isFounder: user.uid === '2D5EyrcNOzLCwFrFX1WSbVRH2662',
-          };
-          setDoc(userRef, newUserProfile).then(() => {
-            setUserProfile(newUserProfile);
-          });
-        }
-        setIsLoadingProfile(false);
-      });
-      return () => unsub();
-    } else if (!user) {
-      // If there's no user, we're not loading a profile.
-      setIsLoadingProfile(false);
+        };
+        setDoc(userRef, newUserProfile);
     }
-  }, [user, firestore]);
+  }, [user, userProfile, profileLoading, firestore]);
 
-  if (isLoadingProfile) {
+  const isLoading = userLoading || profileLoading;
+
+  if (isLoading) {
     return (
       <PageWrapper>
         <main className="container mx-auto py-12 flex justify-center items-center h-[80vh]">

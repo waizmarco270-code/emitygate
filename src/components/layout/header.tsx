@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, LogOut, User as UserIcon } from 'lucide-react';
 import NavLinks from './nav-links';
 import EmityGateLogo from '../icons/emity-gate-logo';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useDoc } from '@/firebase';
 import { getAuth, signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import {
@@ -20,9 +20,13 @@ import {
 } from '../ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
 import type { UserProfile } from '@/lib/types';
+import { doc } from 'firebase/firestore';
 
-const Header = ({ userProfile }: { userProfile: UserProfile | null }) => {
+const Header = () => {
   const { user, loading } = useUser();
+  const firestore = useFirestore();
+  const userProfileRef = user && firestore ? doc(firestore, 'users', user.uid) : null;
+  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
   const router = useRouter();
   const auth = getAuth();
 
