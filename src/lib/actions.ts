@@ -1,8 +1,32 @@
-
 'use server';
 
 import { z } from 'zod';
 import { aiApplicationReview } from '@/ai/flows/ai-application-review';
+import { doc, setDoc } from 'firebase/firestore';
+import { getAdminFirestore } from '@/firebase/admin';
+
+
+// Schema for app settings update
+const appSettingsSchema = z.object({
+  logoUrl: z.string().optional(),
+  faviconUrl: z.string().optional(),
+});
+
+export async function updateAppSettingsAction(data: {logoUrl?: string; faviconUrl?: string}) {
+    try {
+        const validatedData = appSettingsSchema.parse(data);
+        const firestore = getAdminFirestore();
+        await firestore.collection('settings').doc('appDetails').set(validatedData, { merge: true });
+        return { success: true };
+    } catch (error) {
+        console.error("Error in updateAppSettingsAction: ", error);
+         if (error instanceof z.ZodError) {
+            return { success: false, error: "Validation failed: " + error.errors.map(e => e.message).join(', ') };
+        }
+        return { success: false, error: 'An unexpected error occurred on the server.' };
+    }
+}
+
 
 const formSchema = z.object({
   jobDescription: z.string(),

@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getOrbitalProperties } from '@/lib/orbital-mechanics';
 import { useFounderConsole } from '@/context/founder-console-context';
 import Image from 'next/image';
+import { updateAppSettingsAction } from '@/lib/actions';
 
 const engagementData = [
     { name: 'Zenix', value: 4000 },
@@ -339,20 +340,19 @@ const ProjectsTab = ({ onSetProjectToDelete }: { onSetProjectToDelete: (project:
     }
 
     const handleSaveAppSettings = async () => {
-        if (!firestore) return;
         setIsSaving(true);
-        try {
-            const settingsToSave: {logoUrl?: string; faviconUrl?: string} = {};
-            settingsToSave.logoUrl = logoPreview || '';
-            settingsToSave.faviconUrl = faviconPreview || '';
+        const settingsToSave: {logoUrl?: string; faviconUrl?: string} = {};
+        settingsToSave.logoUrl = logoPreview || '';
+        settingsToSave.faviconUrl = faviconPreview || '';
 
-            await setDoc(doc(firestore, 'settings', 'appDetails'), settingsToSave, { merge: true });
+        const result = await updateAppSettingsAction(settingsToSave);
+
+        if (result.success) {
             toast({ title: 'Success', description: 'Core settings have been updated.' });
-        } catch (e: any) {
-            toast({ variant: 'destructive', title: 'Error', description: e.message });
-        } finally {
-            setIsSaving(false);
+        } else {
+            toast({ variant: 'destructive', title: 'Error', description: result.error || 'An unknown error occurred.' });
         }
+        setIsSaving(false);
     };
 
     const handleSaveProject = async (projectData: Partial<Project>) => {
@@ -578,7 +578,7 @@ export default function FounderDashboard() {
                 </TabsContent>
                 <TabsContent value="projects">
                     <ProjectsTab onSetProjectToDelete={setProjectToDelete} />
-                </TabsContent>
+                </Tabs-Content>
             </Tabs>
             
             <AlertDialogContent>
