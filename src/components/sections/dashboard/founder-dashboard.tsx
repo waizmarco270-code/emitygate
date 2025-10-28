@@ -262,7 +262,7 @@ const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project>
     );
 };
 
-const ProjectsTab = () => {
+const ProjectsTab = ({ onSetProjectToDelete }: { onSetProjectToDelete: (project: Project | null) => void }) => {
     const firestore = useFirestore();
     const { toast } = useToast();
     const projectsQuery = firestore ? collection(firestore, 'projects') : null;
@@ -271,7 +271,6 @@ const ProjectsTab = () => {
     const [isFormOpen, setFormOpen] = useState(false);
     const [editingProject, setEditingProject] = useState<Partial<Project> | null>(null);
     const [isSeedLoading, setSeedLoading] = useState(false);
-    const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
     const handleSaveProject = async (projectData: Partial<Project>) => {
         if (!firestore) return;
@@ -302,19 +301,6 @@ const ProjectsTab = () => {
         }
     };
 
-    const confirmDeleteProject = async () => {
-        if (!firestore || !projectToDelete) return;
-        
-        try {
-            await deleteDoc(doc(firestore, 'projects', projectToDelete.id!));
-            toast({ title: "Project removed", description: `${projectToDelete.name} has been removed from the cosmos.`});
-        } catch(e: any) {
-            toast({ variant: 'destructive', title: "Delete failed", description: e.message });
-        } finally {
-            setProjectToDelete(null);
-        }
-    };
-    
     const handleSeedData = async () => {
         if (!firestore) return;
         setSeedLoading(true);
@@ -387,7 +373,7 @@ const ProjectsTab = () => {
                                                     <Pencil className="h-4 w-4" />
                                                 </Button>
                                                 <AlertDialogTrigger asChild>
-                                                     <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setProjectToDelete(project)}>
+                                                     <Button variant="ghost" size="icon" className="text-destructive" onClick={() => onSetProjectToDelete(project)}>
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>
                                                 </AlertDialogTrigger>
@@ -431,6 +417,23 @@ const ProjectsTab = () => {
 
 
 export default function FounderDashboard() {
+    const firestore = useFirestore();
+    const { toast } = useToast();
+    const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+
+    const confirmDeleteProject = async () => {
+        if (!firestore || !projectToDelete) return;
+        
+        try {
+            await deleteDoc(doc(firestore, 'projects', projectToDelete.id!));
+            toast({ title: "Project removed", description: `${projectToDelete.name} has been removed from the cosmos.`});
+        } catch(e: any) {
+            toast({ variant: 'destructive', title: "Delete failed", description: e.message });
+        } finally {
+            setProjectToDelete(null);
+        }
+    };
+
     return (
         <AlertDialog>
             <Tabs defaultValue="overview" className="w-full animate-page-enter">
@@ -446,7 +449,7 @@ export default function FounderDashboard() {
                     <TeamMembersTab />
                 </TabsContent>
                 <TabsContent value="projects">
-                    <ProjectsTab />
+                    <ProjectsTab onSetProjectToDelete={setProjectToDelete} />
                 </TabsContent>
             </Tabs>
             
@@ -467,3 +470,4 @@ export default function FounderDashboard() {
     );
 }
 
+    
