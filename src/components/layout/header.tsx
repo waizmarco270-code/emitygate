@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -76,15 +77,22 @@ const Header = ({ userProfile }: { userProfile: UserProfile | null }) => {
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuContent className="w-64" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                      <p className="text-sm font-medium leading-none">{user.displayName || user.email}</p>
                       <p className="text-xs leading-none text-muted-foreground">
                         {user.email}
                       </p>
-                       {userProfile?.isFounder && <p className="text-xs font-bold text-primary leading-none mt-1">Founder</p>}
+                      {userProfile?.isFounder && <p className="text-xs font-bold text-primary leading-none mt-1">Founder</p>}
                     </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="font-normal">
+                     <div className="flex flex-col space-y-1">
+                        <p className="text-xs leading-none text-muted-foreground">UID</p>
+                        <p className="text-xs font-mono leading-none">{user.uid}</p>
+                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => router.push('/dashboard')}>
