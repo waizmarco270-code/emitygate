@@ -1,6 +1,6 @@
 
 export type OrbitalTier = 'core' | 'inner' | 'outer';
-export type SizePreset = 'small' | 'medium' | 'large';
+export type SizePreset = 'small' | 'medium' | 'large' | 'extra-large';
 
 interface OrbitalProperties {
   size: number;
@@ -19,6 +19,7 @@ const sizeConfig: Record<SizePreset, { size: number }> = {
   small: { size: 50 },
   medium: { size: 70 },
   large: { size: 90 },
+  'extra-large': { size: 120 },
 };
 
 export function getOrbitalProperties(tier: OrbitalTier = 'inner', sizePreset: SizePreset = 'medium'): OrbitalProperties {

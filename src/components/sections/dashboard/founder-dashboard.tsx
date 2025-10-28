@@ -286,6 +286,7 @@ const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project>
                         <SelectItem value="small">Small</SelectItem>
                         <SelectItem value="medium">Medium</SelectItem>
                         <SelectItem value="large">Large</SelectItem>
+                        <SelectItem value="extra-large">Extra Large</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -467,8 +468,8 @@ const AppControlTab = () => {
 
     React.useEffect(() => {
         if (appDetails) {
-            if (appDetails.logoUrl) setLogoPreview(appDetails.logoUrl);
-            if (appDetails.faviconUrl) setFaviconPreview(appDetails.faviconUrl);
+            setLogoPreview(appDetails.logoUrl || null);
+            setFaviconPreview(appDetails.faviconUrl || null);
         }
     }, [appDetails]);
 
@@ -482,14 +483,18 @@ const AppControlTab = () => {
             reader.readAsDataURL(file);
         }
     };
+    
+    const handleRemoveImage = (setter: React.Dispatch<React.SetStateAction<string | null>>) => {
+        setter(null);
+    }
 
     const handleSave = async () => {
         if (!firestore) return;
         setIsSaving(true);
         try {
             const settingsToSave: {logoUrl?: string; faviconUrl?: string} = {};
-            if (logoPreview) settingsToSave.logoUrl = logoPreview;
-            if (faviconPreview) settingsToSave.faviconUrl = faviconPreview;
+            settingsToSave.logoUrl = logoPreview || '';
+            settingsToSave.faviconUrl = faviconPreview || '';
 
             await setDoc(doc(firestore, 'settings', 'appDetails'), settingsToSave, { merge: true });
             toast({ title: 'Success', description: 'App settings have been updated.' });
@@ -515,26 +520,28 @@ const AppControlTab = () => {
                     <div className="space-y-2">
                         <Label>App Logo</Label>
                         <Input type="file" accept="image/*" onChange={(e) => handleFileChange(e, setLogoPreview)} />
-                        {logoPreview && (
-                            <div className="mt-4 p-4 border rounded-md bg-muted/50 flex flex-col items-center">
+                        {logoPreview ? (
+                            <div className="mt-4 p-4 border rounded-md bg-muted/50 flex flex-col items-center gap-4">
                                 <p className="text-sm text-muted-foreground mb-2">Logo Preview</p>
                                 <div className="relative w-48 h-16">
                                     <Image src={logoPreview} alt="Logo Preview" fill style={{objectFit: 'contain'}} />
                                 </div>
+                                <Button variant="destructive" size="sm" onClick={() => handleRemoveImage(setLogoPreview)}>Remove Logo</Button>
                             </div>
-                        )}
+                        ) : <div className="mt-4 p-4 border border-dashed rounded-md text-center text-muted-foreground">No Logo Uploaded</div>}
                     </div>
                      <div className="space-y-2">
                         <Label>Favicon</Label>
                         <Input type="file" accept="image/png, image/x-icon, image/svg+xml" onChange={(e) => handleFileChange(e, setFaviconPreview)} />
-                        {faviconPreview && (
-                            <div className="mt-4 p-4 border rounded-md bg-muted/50 flex flex-col items-center">
+                        {faviconPreview ? (
+                            <div className="mt-4 p-4 border rounded-md bg-muted/50 flex flex-col items-center gap-4">
                                 <p className="text-sm text-muted-foreground mb-2">Favicon Preview</p>
                                 <div className="relative w-12 h-12">
                                     <Image src={faviconPreview} alt="Favicon Preview" fill style={{objectFit: 'contain'}} />
                                 </div>
+                                <Button variant="destructive" size="sm" onClick={() => handleRemoveImage(setFaviconPreview)}>Remove Favicon</Button>
                             </div>
-                        )}
+                        ) : <div className="mt-4 p-4 border border-dashed rounded-md text-center text-muted-foreground">No Favicon Uploaded</div>}
                     </div>
                 </div>
                 <Button onClick={handleSave} disabled={isSaving}>
