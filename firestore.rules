@@ -1,123 +1,89 @@
 /**
  * @file Firestore Security Rules
- * @description This ruleset enforces a strict user-ownership model for user profiles,
- *              allows public read access to projects with owner-only writes,
- *              and restricts access to application settings to authenticated users.
+ * @description This ruleset enforces a role-based access control model with founders and admins having elevated privileges.
  *
  * Data Structure:
- * - /users/{userId}: Stores public user profile information. Access is restricted to the owner (the user with the matching userId) for create, update, and delete operations.
- * - /projects/{projectId}: Stores information about EmityGate projects. Public read access is granted, but create, update, and delete operations are restricted to the project owner.
- * - /settings/appDetails: Stores global application settings. Only authenticated users can read or write to this document.
+ * - /projects/{projectId}: Stores project information. Publicly readable, but write access restricted to founders and admins.
+ * - /users/{userId}: Stores user profile information. Accessible to the owner or founders/admins.
+ * - /settings/appDetails: Stores global app settings. Write access restricted to founders and admins.
  *
  * Key Security Decisions:
- * - User listing is disallowed.
- * - All write operations require authentication.
- *
- * Denormalization for Authorization:
- * - The `Project` entity lacks an `ownerId` field. To enable owner-only writes, the rules will require this field to be present in the document and match the authenticated user's UID on create. Update and delete operations will then validate ownership against this field.
- *
- * Structural Segregation:
- * - Public project data is stored in the top-level `/projects` collection, separate from any user-specific private data.
+ * - User profiles cannot be deleted.
+ * - Founders and admins can read all user profiles.
+ * - Read-only access to the settings document is granted to all users.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to user profile documents.
-     * @path /users/{userId}
-     * @allow (create) - User 'user_abc' can create their profile if request.auth.uid == 'user_abc'.
-     * @allow (get, list) - User 'user_abc' can read their profile.
-     * @deny (create) - User 'user_xyz' cannot create a profile for user 'user_abc'.
-     * @deny (update, delete) - Only the owner can update or delete their profile.
-     * @principle Enforces document ownership for writes.
+     * @description Checks if the request is made by the user who owns the resource.
+     * @param {string} userId The user ID to compare against the request's authentication UID.
+     * @return {bool} True if the request is made by the owner, false otherwise.
+     * @example isOwner("user123") returns true if request.auth.uid == "user123".
      */
-    match /users/{userId} {
-      // Helper function to check if the user is signed in.
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      // Helper function to check if the user is the owner of the document.
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
-      // Helper function to check if the user is the existing owner of the document.
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if false;
-
-      // Allow the user to create their own profile if the UID matches.
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.uid == userId;
-
-      // Only the owner can update their profile.
-      allow update: if isExistingOwner(userId) && request.resource.data.uid == resource.data.uid;
-
-      // Only the owner can delete their profile.
-      allow delete: if isExistingOwner(userId);
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
 
     /**
-     * @description Controls access to project documents. Allows public reads, but restricts writes to the owner.
+     * @description Checks if the request is made by a founder or an admin.
+     * @return {bool} True if the request is made by a founder or an admin, false otherwise.
+     * @example isFounderOrAdmin() returns true if the user's document has isFounder or isAdmin set to true.
+     */
+    function isFounderOrAdmin() {
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return userDoc.data.isFounder == true || userDoc.data.isAdmin == true;
+    }
+
+    /**
+     * @description Defines security rules for the /projects/{projectId} collection.
      * @path /projects/{projectId}
-     * @allow (get, list) - Any user can read any project.
-     * @allow (create) - User 'user_abc' can create a project if request.auth.uid matches the project's ownerId.
-     * @deny (create) - User 'user_xyz' cannot create a project for user 'user_abc'.
-     * @deny (update, delete) - Only the owner can update or delete their projects.
-     * @principle Enforces document ownership for writes, allows public reads.
+     * @allow (get, list): Allows any user to read project data.
+     * @allow (create, update, delete): Allows founders or admins to modify project data.
+     * @deny (create, update, delete): Denies non-founders/admins from modifying project data.
+     * @principle Allows public read access, but restricts write access to authorized roles (founders, admins).
      */
     match /projects/{projectId} {
-      // Helper function to check if the user is signed in.
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      // Helper function to check if the user is the owner of the document.
-      function isOwner(ownerId) {
-        return isSignedIn() && request.auth.uid == ownerId;
-      }
-
-      // Helper function to check if the user is the existing owner of the document.
-      function isExistingOwner(ownerId) {
-        return isOwner(ownerId) && resource != null;
-      }
-
       allow get: if true;
       allow list: if true;
+      allow create: if request.auth != null && isFounderOrAdmin();
+      allow update: if request.auth != null && isFounderOrAdmin();
+      allow delete: if request.auth != null && isFounderOrAdmin();
+    }
 
-      // Allow creating a project if the ownerId matches the authenticated user.
-      allow create: if isSignedIn() && isOwner(request.resource.data.ownerId);
-
-      // Only the owner can update the project.
-      allow update: if isExistingOwner(resource.data.ownerId);
-
-      // Only the owner can delete the project.
-      allow delete: if isExistingOwner(resource.data.ownerId);
+    /**
+     * @description Defines security rules for the /users/{userId} collection.
+     * @path /users/{userId}
+     * @allow (get): Allows the owner or founders/admins to read the user profile.
+     * @allow (create): Allows a user to create their own profile.
+     * @allow (update): Allows the owner to update their own profile.
+     * @deny (delete): Profiles cannot be deleted.
+     * @deny (create): Denies creating a profile with a different user ID than the authenticated user.
+     * @principle Enforces document ownership for writes, restricts access to a user's own data tree.
+     */
+    match /users/{userId} {
+      allow get: if request.auth != null && (isOwner(userId) || isFounderOrAdmin());
+      allow list: if request.auth != null && isFounderOrAdmin();
+      allow create: if request.auth != null && isOwner(userId);
+      allow update: if request.auth != null && isOwner(userId);
+      allow delete: if false;
     }
 
      /**
-      * @description Controls access to application settings. Requires authentication for all operations.
+      * @description Defines security rules for the /settings/appDetails document.
       * @path /settings/appDetails
-      * @allow (get, list) - Any signed-in user can read the settings.
-      * @allow (create, update, delete) - Any signed-in user can create, update, or delete the settings.
-      * @principle Requires authentication for all operations.
+      * @allow (get, list): Allows any user to read the settings document.
+      * @allow (create, update, delete): Allows founders or admins to modify the settings.
+      * @deny (create, update, delete): Denies non-founders/admins from modifying the settings.
+      * @principle Allows public read access, but restricts write access to authorized roles (founders, admins).
       */
     match /settings/appDetails {
-      // Helper function to check if the user is signed in.
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      allow get: if isSignedIn();
+      allow get: if true;
       allow list: if false;
-
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && resource != null;
-      allow delete: if isSignedIn() && resource != null;
+      allow create: if request.auth != null && isFounderOrAdmin();
+      allow update: if request.auth != null && isFounderOrAdmin();
+      allow delete: if request.auth != null && isFounderOrAdmin();
     }
   }
 }
