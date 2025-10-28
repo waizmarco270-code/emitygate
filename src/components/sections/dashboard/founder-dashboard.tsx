@@ -43,7 +43,7 @@ const OverviewTab = () => {
 
     return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="lg:col-span-1 border-primary/20 hover:border-primary/50 transition-all glow-primary">
+        <Card className="lg:col-span-1 border-primary/20 hover:border-primary/50 transition-all">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Empire Population</CardTitle>
                 <Users className="h-4 w-4 text-primary" />

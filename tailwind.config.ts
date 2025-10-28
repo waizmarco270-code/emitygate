@@ -89,16 +89,6 @@ export default {
             height: '0',
           },
         },
-        'pulse-glow': {
-          '0%, 100%': {
-            boxShadow: '0 0 30px hsl(var(--primary) / 0.4)',
-            opacity: '1'
-          },
-          '50%': {
-            boxShadow: '0 0 50px hsl(var(--primary) / 0.2)',
-            opacity: '0.8'
-          }
-        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
