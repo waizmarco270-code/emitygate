@@ -1,6 +1,6 @@
 
 'use server';
-import 'dotenv/config';
+
 import { z } from 'zod';
 import { aiApplicationReview } from '@/ai/flows/ai-application-review';
 
@@ -46,15 +46,10 @@ export async function reviewApplicationAction(formData: FormData) {
 const vaultPassphraseSchema = z.string();
 
 export async function checkVaultPassphrase(passphrase: string) {
-  'use server';
   try {
     const validatedPassphrase = vaultPassphraseSchema.parse(passphrase);
-    const correctPassphrase = process.env.LEGACY_VAULT_PASSPHRASE;
-
-    if (!correctPassphrase) {
-        console.error("LEGACY_VAULT_PASSPHRASE is not set in .env file");
-        return { success: false, error: 'Server configuration error.' };
-    }
+    // This is not secure for production. We will replace this with a proper secret management solution.
+    const correctPassphrase = "empire";
 
     if (validatedPassphrase === correctPassphrase) {
         return { success: true, error: null };
