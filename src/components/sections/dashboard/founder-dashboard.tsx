@@ -25,6 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { getOrbitalProperties } from '@/lib/orbital-mechanics';
 import { useFounderConsole } from '@/context/founder-console-context';
+import Image from 'next/image';
 
 const engagementData = [
     { name: 'Zenix', value: 4000 },
@@ -189,8 +190,9 @@ const TeamMembersTab = () => {
     )
 };
 
-const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project> | null, onSave: (project: Partial<Project>) => void, onCancel: () => void }) => {
-    const [formData, setFormData] = useState<Partial<Project>>(project || { name: '', description: '', icon: 'Link', color: 'hsl(207, 90%, 40%)', url: '', tier: 'inner', sizePreset: 'medium' });
+const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project> | null, onSave: (project: Partial<Project>, iconFile?: File) => void, onCancel: () => void }) => {
+    const [formData, setFormData] = useState<Partial<Project>>(project || { name: '', description: '', icon: 'Link', color: 'hsl(207, 90%, 40%)', url: '', tier: 'inner', sizePreset: 'medium', iconImage: '' });
+    const [iconFile, setIconFile] = useState<File | undefined>();
     
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -200,10 +202,22 @@ const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project>
     const handleSelectChange = (name: string) => (value: string) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     }
+    
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setIconFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData(prev => ({ ...prev, iconImage: reader.result as string }))
+            }
+            reader.readAsDataURL(file);
+        }
+    }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(formData);
+        onSave(formData, iconFile);
     }
 
     return (
@@ -220,8 +234,13 @@ const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project>
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" name="description" value={formData.description} onChange={handleChange} required />
             </div>
+             <div className="space-y-2">
+                <Label htmlFor="iconImage">Icon Image</Label>
+                <Input id="iconImage" name="iconImage" type="file" onChange={handleFileChange} accept="image/*" />
+                 {formData.iconImage && <div className="w-16 h-16 mt-2 relative"><Image src={formData.iconImage} alt="icon preview" layout="fill" objectFit="cover" className="rounded-md"/></div>}
+            </div>
             <div className="space-y-2">
-                <Label htmlFor="icon">Icon</Label>
+                <Label htmlFor="icon">Fallback Icon (if no image)</Label>
                  <Select name="icon" value={formData.icon} onValueChange={handleSelectChange('icon')}>
                     <SelectTrigger>
                         <SelectValue placeholder="Select an icon" />
@@ -235,7 +254,7 @@ const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project>
                 </Select>
             </div>
             <div className="space-y-2">
-                <Label htmlFor="color">Color (HSL)</Label>
+                <Label htmlFor="color">Planet Color (HSL)</Label>
                 <Input id="color" name="color" value={formData.color} onChange={handleChange} required />
             </div>
              <div className="space-y-2">
@@ -282,10 +301,11 @@ const ProjectsTab = ({ onSetProjectToDelete }: { onSetProjectToDelete: (project:
         if (!firestore) return;
         
         const orbitalProperties = getOrbitalProperties(projectData.tier, projectData.sizePreset);
-        const projectToSave = {
+        const projectToSave: Partial<Project> = {
             name: projectData.name!,
             description: projectData.description!,
             icon: projectData.icon!,
+            iconImage: projectData.iconImage || '',
             color: projectData.color!,
             url: projectData.url!,
             tier: projectData.tier!,
@@ -361,8 +381,12 @@ const ProjectsTab = ({ onSetProjectToDelete }: { onSetProjectToDelete: (project:
                                         <TableRow key={project.id}>
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: project.color }}>
-                                                        <Icon className="w-5 h-5 text-white" />
+                                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center relative" style={{ backgroundColor: project.color }}>
+                                                        {project.iconImage ? (
+                                                            <Image src={project.iconImage} alt={project.name} layout="fill" objectFit="contain" className="p-1" />
+                                                        ) : (
+                                                            <Icon className="w-5 h-5 text-white" />
+                                                        )}
                                                     </div>
                                                     <span className="font-medium">{project.name}</span>
                                                 </div>

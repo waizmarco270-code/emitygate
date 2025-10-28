@@ -3,6 +3,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useMousePosition } from '@/hooks/use-mouse-position';
 import { Button } from '@/components/ui/button';
 import { ArrowDown } from 'lucide-react';
@@ -70,7 +71,7 @@ const Hero = () => {
               }}
             >
               <div
-                className="rounded-full flex items-center justify-center transition-all hover:scale-110"
+                className="rounded-full flex items-center justify-center transition-all hover:scale-110 relative"
                 style={{
                   width: p.size,
                   height: p.size,
@@ -78,7 +79,11 @@ const Hero = () => {
                   boxShadow: `0 0 20px ${p.color}, inset 0 0 10px ${p.color}`,
                 }}
               >
-                <Icon className="text-white" style={{width: p.size*0.5, height: p.size*0.5 }} />
+                {p.iconImage ? (
+                  <Image src={p.iconImage} alt={p.name} layout="fill" objectFit="contain" className="p-2"/>
+                ) : (
+                  <Icon className="text-white" style={{width: p.size*0.5, height: p.size*0.5 }} />
+                )}
               </div>
                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 text-center pointer-events-none">
                   <p className="text-sm font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">{p.name}</p>

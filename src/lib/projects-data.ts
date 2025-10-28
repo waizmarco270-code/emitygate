@@ -24,6 +24,7 @@ export type Project = {
   name: string;
   description:string;
   icon: string;
+  iconImage?: string; // Optional Base64 image
   color: string;
   url: string;
   tier: OrbitalTier,

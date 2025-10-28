@@ -43,6 +43,7 @@
         "name": { "type": "string", "description": "The name of the project." },
         "description": { "type": "string", "description": "A short description of the project." },
         "icon": { "type": "string", "description": "The name of the lucide-react icon for the project." },
+        "iconImage": { "type": "string", "description": "A Base64 data URI of the project's icon image." },
         "color": { "type": "string", "description": "The hsl color of the project planet." },
         "url": { "type": "string", "format": "uri", "description": "The URL of the project." },
         "size": { "type": "number", "description": "The size of the planet in pixels." },
