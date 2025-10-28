@@ -3,6 +3,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Globe, Cpu, Film } from 'lucide-react';
+import type { UserProfile } from '@/lib/types';
 
 const WorldMap = () => (
     <div className="relative aspect-[2/1] w-full overflow-hidden rounded-lg bg-background/20 p-4">
@@ -24,8 +25,8 @@ const WorldMap = () => (
 );
 
 
-export default function FounderConsole({ isOpen, onClose }: { isOpen: boolean; onClose: () => void; }) {
-  if (!isOpen) return null;
+export default function FounderConsole({ isOpen, onClose, userProfile }: { isOpen: boolean; onClose: () => void; userProfile: UserProfile | null }) {
+  if (!isOpen || !userProfile?.isFounder) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

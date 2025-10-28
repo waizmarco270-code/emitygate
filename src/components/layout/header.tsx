@@ -18,8 +18,9 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
+import type { UserProfile } from '@/lib/types';
 
-const Header = () => {
+const Header = ({ userProfile }: { userProfile: UserProfile | null }) => {
   const { user, loading } = useUser();
   const router = useRouter();
   const auth = getAuth();
@@ -70,7 +71,7 @@ const Header = () => {
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={user.photoURL || undefined} alt={user.displayName || user.email || ''} />
                       <AvatarFallback>
-                        {user.email?.[0].toUpperCase()}
+                        {userProfile?.isFounder ? '👑' : user.email?.[0].toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -82,6 +83,7 @@ const Header = () => {
                       <p className="text-xs leading-none text-muted-foreground">
                         {user.email}
                       </p>
+                       {userProfile?.isFounder && <p className="text-xs font-bold text-primary leading-none mt-1">Founder</p>}
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />

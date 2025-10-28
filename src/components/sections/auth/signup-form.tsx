@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, UserPlus, AlertTriangle } from 'lucide-react';
-import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
@@ -59,16 +59,16 @@ export default function SignupForm() {
     },
   });
 
-  const createUserProfile = async (user: any) => {
-    if (!user) return;
+  const createUserProfile = async (user: User) => {
+    if (!firestore) return;
     const userRef = doc(firestore, `users/${user.uid}`);
     const userData = {
       uid: user.uid,
       email: user.email,
       displayName: user.displayName,
       photoURL: user.photoURL,
-      isAdmin: false, // Default role
-      isFounder: false // Default role
+      isAdmin: false,
+      isFounder: user.email === 'waizmonazzum270@gmail.com',
     };
     return setDoc(userRef, userData, { merge: true });
   }
@@ -140,7 +140,7 @@ export default function SignupForm() {
                 <FormItem>
                   <FormLabel>Confirm Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} disabled={isLoading || isGoogleLoading}/>
+                    <Input type="password" placeholder="••••••••" {...field} disabled={isLoading || isGoogle-loading}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -5,14 +5,30 @@ import React, { useState, useEffect } from 'react';
 import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
 import FounderConsole from '@/components/founder-console';
+import { useUser, useFirestore } from '@/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
+import type { UserProfile } from '@/lib/types';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
-    setIsClient(true);
-  }, []);
+    if (user && firestore) {
+      const unsub = onSnapshot(doc(firestore, "users", user.uid), (doc) => {
+        if (doc.exists()) {
+          setUserProfile(doc.data() as UserProfile);
+        } else {
+          setUserProfile(null);
+        }
+      });
+      return () => unsub();
+    } else {
+      setUserProfile(null);
+    }
+  }, [user, firestore]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -30,12 +46,12 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   return (
     <>
-      {isClient && <Header />}
+      <Header userProfile={userProfile} />
       <div className="min-h-screen">
         {children}
       </div>
-      {isClient && <Footer />}
-      {isClient && <FounderConsole isOpen={isConsoleOpen} onClose={() => setIsConsoleOpen(false)} />}
+      <Footer />
+      <FounderConsole isOpen={isConsoleOpen} onClose={() => setIsConsoleOpen(false)} userProfile={userProfile} />
     </>
   );
 }

@@ -4,7 +4,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
 import { FirebaseClientProvider } from '@/firebase';
-import ClientLayout from '@/components/client-layout';
+import ClientLayoutWrapper from '@/components/client-layout-wrapper';
 
 export const metadata: Metadata = {
   title: 'EmityGate Command',
@@ -31,7 +31,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <ClientLayout>{children}</ClientLayout>
+            <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
             <Toaster />
           </ThemeProvider>
         </FirebaseClientProvider>
