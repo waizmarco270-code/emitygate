@@ -198,9 +198,8 @@ const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project>
       icon: 'Link',
       color: 'hsl(207, 90%, 40%)',
       url: '',
-      tier: project?.tier || 'inner',
-      sizePreset: project?.sizePreset || 'medium',
-      iconImage: '',
+      tier: 'inner',
+      sizePreset: 'medium',
       ...project,
     });
     const [iconFile, setIconFile] = useState<File | undefined>();
@@ -578,7 +577,7 @@ export default function FounderDashboard() {
                 </TabsContent>
                 <TabsContent value="projects">
                     <ProjectsTab onSetProjectToDelete={setProjectToDelete} />
-                </Tabs-Content>
+                </TabsContent>
             </Tabs>
             
             <AlertDialogContent>
@@ -597,5 +596,3 @@ export default function FounderDashboard() {
         </AlertDialog>
     );
 }
-
-    
