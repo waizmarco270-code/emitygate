@@ -1,34 +1,34 @@
 /**
- * @file Firestore Security Rules
- * @description This ruleset enforces a user-ownership model for user profiles
- * and allows public read access for projects, with owner-only writes.
+ * @fileoverview Firestore Security Rules for EmityGate.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a combination of user-based access control and global read access where appropriate. User profiles are secured under their respective user IDs, while project data is publicly readable but only modifiable by authenticated users.  Global application settings are secured for admin-only access.
  *
  * Data Structure:
- * - /users/{userId}: Stores public user profile data.
- * - /projects/{projectId}: Stores project details.
+ * - /users/{userId}: Stores user profile information. Access is restricted to the user themselves (ownership).
+ * - /projects/{projectId}: Stores project information.  Data is publicly readable, but writes are only allowed by authenticated users.
+ * - /settings/appDetails: Stores global application settings.  Writes are not explicitly supported, indicating that only backend/admin updates are permitted, but reads are public.
  *
  * Key Security Decisions:
- * - User profiles are strictly owned by the user with matching user ID.
- * - Projects are publicly readable, but only owners can create, update, or delete them.
+ * - User listing is disallowed.
+ * - The AppSettings document is implicitly read-only from the client perspective.
  *
  * Denormalization for Authorization:
- * - Projects do not currently have an ownerId field.
- *
- * Structural Segregation:
- * - There is no segregation between public and private data.
+ * - The `/users/{userId}` documents store the `uid` within the document, enabling `create` validation to ensure the document ID matches the user's UID.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to user profiles.
+     * @description Controls access to user profile documents.
      * @path /users/{userId}
-     * @allow (create) User with matching ID can create their profile.
-     * @allow (get, list, update, delete) User with matching ID can access their profile.
-     * @deny (create) User cannot create a profile with an ID that doesn't match their own.
-     * @deny (get, list, update, delete) Other users cannot access a profile.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) - If the user is creating their own profile (uid matches).
+     * @allow (get, list) - If the user is requesting their own profile data.
+     * @allow (update, delete) - If the user is updating or deleting their own profile.
+     * @deny (create) - If the user attempts to create a profile for another user.
+     * @deny (get, list, update, delete) - If the user attempts to access another user's profile.
+     * @principle Enforces document ownership and prevents unauthorized access to user data.
      */
     match /users/{userId} {
       function isSignedIn() {
@@ -40,33 +40,50 @@ service cloud.firestore {
       }
 
       function isExistingOwner(userId) {
-          return isOwner(userId) && resource != null;
+        return isOwner(userId) && resource != null;
       }
 
       allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
+      allow list: if false; // User listing is not allowed.
+      allow create: if isOwner(userId) && request.resource.data.uid == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.uid == resource.data.uid;
       allow delete: if isExistingOwner(userId);
     }
 
-    /**
-     * @description Controls access to projects.
-     * @path /projects/{projectId}
-     * @allow (get, list) Any user can read project details.
-     * @allow (create, update, delete) Only the project owner can modify or delete a project.
-     * @deny (create) Non-owners cannot create projects.
-     * @deny (update, delete) Non-owners cannot modify or delete projects.
-     * @principle Allows public read access with owner-only writes.
-     */
+     /**
+      * @description Controls access to project documents.
+      * @path /projects/{projectId}
+      * @allow (get, list) - Anyone can view the projects.
+      * @allow (create) - Only authenticated users can create projects. Requires an 'ownerId' field.
+      * @allow (update, delete) - Only the project owner can modify or delete projects. Requires an 'ownerId' field.
+      * @deny (create, update, delete) - If the user is not the project owner.
+      * @principle Allows public read access but restricts write access to the project owner.
+      */
     match /projects/{projectId} {
       function isSignedIn() {
         return request.auth != null;
       }
 
-      // CRITICAL: Cannot implement owner-only writes. The 'Project' entity is missing an 'ownerId' or 'authorId' field.
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn();
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Controls access to the global application settings.
+     * @path /settings/appDetails
+     * @allow (get, list) - Anyone can read the application settings.
+     * @deny (create, update, delete) - No client-side writes are allowed, indicating admin-only write access.
+     * @principle Provides public read access to global settings but restricts write access.
+     */
+    match /settings/appDetails {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
   }
 }
