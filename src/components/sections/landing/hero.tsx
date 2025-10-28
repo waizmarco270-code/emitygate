@@ -71,16 +71,16 @@ const Hero = () => {
               }}
             >
               <div
-                className="rounded-full flex items-center justify-center transition-all hover:scale-110 relative"
+                className="rounded-full flex items-center justify-center transition-all hover:scale-110 relative overflow-hidden"
                 style={{
                   width: p.size,
                   height: p.size,
                   backgroundColor: p.color,
-                  boxShadow: `0 0 20px ${p.color}, inset 0 0 10px ${p.color}`,
+                  boxShadow: `0 0 20px ${p.color}, inset 0 0 10px rgba(255,255,255,0.3)`,
                 }}
               >
                 {p.iconImage ? (
-                  <Image src={p.iconImage} alt={p.name} layout="fill" objectFit="contain" className="p-2"/>
+                  <Image src={p.iconImage} alt={p.name} layout="fill" objectFit="cover" className="rounded-full"/>
                 ) : (
                   <Icon className="text-white" style={{width: p.size*0.5, height: p.size*0.5 }} />
                 )}

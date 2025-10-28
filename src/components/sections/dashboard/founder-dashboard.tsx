@@ -197,8 +197,8 @@ const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project>
       icon: 'Link',
       color: 'hsl(207, 90%, 40%)',
       url: '',
-      tier: 'inner',
-      sizePreset: 'medium',
+      tier: project?.tier || 'inner',
+      sizePreset: project?.sizePreset || 'medium',
       iconImage: '',
       ...project,
     });
@@ -391,9 +391,9 @@ const ProjectsTab = ({ onSetProjectToDelete }: { onSetProjectToDelete: (project:
                                         <TableRow key={project.id}>
                                             <TableCell>
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center relative" style={{ backgroundColor: project.color }}>
+                                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: project.color }}>
                                                         {project.iconImage ? (
-                                                            <Image src={project.iconImage} alt={project.name} layout="fill" objectFit="contain" className="p-1" />
+                                                            <Image src={project.iconImage} alt={project.name} layout="fill" objectFit="cover" />
                                                         ) : (
                                                             <Icon className="w-5 h-5 text-white" />
                                                         )}
