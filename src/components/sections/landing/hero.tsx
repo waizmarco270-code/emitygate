@@ -35,11 +35,12 @@ const Hero = () => {
   }, []);
 
   return (
-    <section className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-background">
+    <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
       <Starfield
         starCount={1000}
         starColor={[255, 255, 255]}
         speedFactor={0.05}
+        backgroundColor="hsl(var(--background))"
       />
       
       {/* Galaxy System */}
