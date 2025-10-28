@@ -17,7 +17,7 @@ const AIApplicationReviewInputSchema = z.object({
     .describe(
       "The applicant's resume as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
-  coverLetter: z.string().describe('The applicant\'s cover letter.'),
+  coverLetter: z.string().describe("The applicant's cover letter."),
   jobDescription: z.string().describe('The job description for the applied position.'),
 });
 export type AIApplicationReviewInput = z.infer<typeof AIApplicationReviewInputSchema>;
@@ -51,9 +51,9 @@ const prompt = ai.definePrompt({
   Resume: {{media url=resumeDataUri}}
   Cover Letter: {{{coverLetter}}}
   Job Description: {{{jobDescription}}}
-  \n\
+  
   Output format should be a JSON object with 'feedback' (string) and 'overallScore' (number) fields.
-  \n\
+  
   Ensure the output is valid JSON.
   `,
 });
