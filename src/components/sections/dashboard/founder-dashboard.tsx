@@ -3,11 +3,11 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { BarChart as BarChartIcon, FileText, Globe, Users, Waypoints, Link as LinkIcon, Pencil, Trash2, PlusCircle, HardDrive, Terminal } from "lucide-react";
+import { BarChart as BarChartIcon, FileText, Globe, Users, Waypoints, Link as LinkIcon, Pencil, Trash2, PlusCircle, HardDrive, Terminal, Settings } from "lucide-react";
 import { Bar, BarChart as RechartsBar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useCollection, useFirestore } from "@/firebase";
+import { useCollection, useDoc, useFirestore } from "@/firebase";
 import { collection, doc, setDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import type { UserProfile } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -455,6 +455,95 @@ const ProjectsTab = ({ onSetProjectToDelete }: { onSetProjectToDelete: (project:
     );
 };
 
+const AppControlTab = () => {
+    const firestore = useFirestore();
+    const { toast } = useToast();
+    const appDetailsRef = firestore ? doc(firestore, 'settings', 'appDetails') : null;
+    const { data: appDetails, loading: appDetailsLoading } = useDoc<{logoUrl?: string; faviconUrl?: string}>(appDetailsRef);
+    
+    const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+
+    React.useEffect(() => {
+        if (appDetails) {
+            if (appDetails.logoUrl) setLogoPreview(appDetails.logoUrl);
+            if (appDetails.faviconUrl) setFaviconPreview(appDetails.faviconUrl);
+        }
+    }, [appDetails]);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string | null>>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setter(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleSave = async () => {
+        if (!firestore) return;
+        setIsSaving(true);
+        try {
+            const settingsToSave: {logoUrl?: string; faviconUrl?: string} = {};
+            if (logoPreview) settingsToSave.logoUrl = logoPreview;
+            if (faviconPreview) settingsToSave.faviconUrl = faviconPreview;
+
+            await setDoc(doc(firestore, 'settings', 'appDetails'), settingsToSave, { merge: true });
+            toast({ title: 'Success', description: 'App settings have been updated.' });
+        } catch (e: any) {
+            toast({ variant: 'destructive', title: 'Error', description: e.message });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    if (appDetailsLoading) {
+        return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>App Control</CardTitle>
+                <CardDescription>Manage the global identity of the EmityGate empire.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                    <div className="space-y-2">
+                        <Label>App Logo</Label>
+                        <Input type="file" accept="image/*" onChange={(e) => handleFileChange(e, setLogoPreview)} />
+                        {logoPreview && (
+                            <div className="mt-4 p-4 border rounded-md bg-muted/50 flex flex-col items-center">
+                                <p className="text-sm text-muted-foreground mb-2">Logo Preview</p>
+                                <div className="relative w-48 h-16">
+                                    <Image src={logoPreview} alt="Logo Preview" fill style={{objectFit: 'contain'}} />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                     <div className="space-y-2">
+                        <Label>Favicon</Label>
+                        <Input type="file" accept="image/png, image/x-icon, image/svg+xml" onChange={(e) => handleFileChange(e, setFaviconPreview)} />
+                        {faviconPreview && (
+                            <div className="mt-4 p-4 border rounded-md bg-muted/50 flex flex-col items-center">
+                                <p className="text-sm text-muted-foreground mb-2">Favicon Preview</p>
+                                <div className="relative w-12 h-12">
+                                    <Image src={faviconPreview} alt="Favicon Preview" fill style={{objectFit: 'contain'}} />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                <Button onClick={handleSave} disabled={isSaving}>
+                    {isSaving ? <Loader2 className="animate-spin" /> : 'Save App Settings'}
+                </Button>
+            </CardContent>
+        </Card>
+    );
+}
 
 export default function FounderDashboard() {
     const firestore = useFirestore();
@@ -477,10 +566,13 @@ export default function FounderDashboard() {
     return (
         <AlertDialog>
             <Tabs defaultValue="overview" className="w-full animate-page-enter">
-                <TabsList className="grid w-full grid-cols-3 max-w-md mx-auto mb-6">
+                <TabsList className="grid w-full grid-cols-4 max-w-lg mx-auto mb-6">
                     <TabsTrigger value="overview">Overview</TabsTrigger>
                     <TabsTrigger value="team">Team</TabsTrigger>
                     <TabsTrigger value="projects">Projects</TabsTrigger>
+                    <TabsTrigger value="app-control">
+                        <Settings className="w-4 h-4 mr-2" /> App Control
+                    </TabsTrigger>
                 </TabsList>
                 <TabsContent value="overview">
                     <OverviewTab />
@@ -490,6 +582,9 @@ export default function FounderDashboard() {
                 </TabsContent>
                 <TabsContent value="projects">
                     <ProjectsTab onSetProjectToDelete={setProjectToDelete} />
+                </TabsContent>
+                <TabsContent value="app-control">
+                    <AppControlTab />
                 </TabsContent>
             </Tabs>
             
@@ -509,5 +604,3 @@ export default function FounderDashboard() {
         </AlertDialog>
     );
 }
-
-    

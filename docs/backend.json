@@ -1,6 +1,21 @@
 
 {
   "entities": {
+    "AppSettings": {
+      "title": "App Settings",
+      "description": "Global settings for the application.",
+      "type": "object",
+      "properties": {
+        "logoUrl": {
+          "type": "string",
+          "description": "The Base64 data URI of the main application logo."
+        },
+        "faviconUrl": {
+          "type": "string",
+          "description": "The Base64 data URI of the application favicon."
+        }
+      }
+    },
     "UserProfile": {
       "title": "User Profile",
       "description": "Represents a user's profile in the system.",
@@ -69,6 +84,12 @@
             "$ref": "#/entities/Project"
         },
         "description": "Stores information about the EmityGate projects."
+    },
+    "/settings/appDetails": {
+      "schema": {
+        "$ref": "#/entities/AppSettings"
+      },
+      "description": "Stores global application settings like logo and favicon."
     }
   }
 }
