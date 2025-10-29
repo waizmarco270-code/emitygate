@@ -1,4 +1,3 @@
-
 'use client';
 
 import { cn } from '@/lib/utils';
@@ -54,7 +53,6 @@ export default function SplashScreen({ onAnimationComplete }: { onAnimationCompl
         shouldAnimateOut ? "opacity-0" : "opacity-100"
       )}
     >
-       {/* === VIDEO PLACEHOLDER === */}
        {/* Create a 'public' folder in the root of your project. */}
        {/* Place your video file named 'video.mp4' inside the 'public' folder. */}
        <video 
