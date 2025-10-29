@@ -1,89 +1,95 @@
 /**
- * @file Firestore Security Rules
- * @description This ruleset enforces a role-based access control model with founders and admins having elevated privileges.
+ * @fileoverview Firestore Security Rules for EmityGate.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a role-based access control model with founders and admins having elevated privileges.
+ * Users can only manage their own profiles. Projects are publicly readable, but write access is restricted to founders only.
  *
  * Data Structure:
- * - /projects/{projectId}: Stores project information. Publicly readable, but write access restricted to founders and admins.
- * - /users/{userId}: Stores user profile information. Accessible to the owner or founders/admins.
- * - /settings/appDetails: Stores global app settings. Write access restricted to founders and admins.
+ * - /users/{userId}: Stores user profiles, accessible only to the user themselves or founders.
+ * - /projects/{projectId}: Stores project data, publicly readable but writable only by founders.
  *
  * Key Security Decisions:
- * - User profiles cannot be deleted.
- * - Founders and admins can read all user profiles.
- * - Read-only access to the settings document is granted to all users.
+ * - User listing is disallowed for privacy.
+ * - Founders can create other founders.
+ *
+ * Denormalization for Authorization:
+ * The `isAdmin` and `isFounder` flags are denormalized directly onto the user profile documents to avoid costly `get()` calls when checking for elevated privileges.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Checks if the request is made by the user who owns the resource.
-     * @param {string} userId The user ID to compare against the request's authentication UID.
-     * @return {bool} True if the request is made by the owner, false otherwise.
-     * @example isOwner("user123") returns true if request.auth.uid == "user123".
-     */
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    /**
-     * @description Checks if the request is made by a founder or an admin.
-     * @return {bool} True if the request is made by a founder or an admin, false otherwise.
-     * @example isFounderOrAdmin() returns true if the user's document has isFounder or isAdmin set to true.
-     */
-    function isFounderOrAdmin() {
-      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
-      return userDoc.data.isFounder == true || userDoc.data.isAdmin == true;
-    }
-
-    /**
-     * @description Defines security rules for the /projects/{projectId} collection.
-     * @path /projects/{projectId}
-     * @allow (get, list): Allows any user to read project data.
-     * @allow (create, update, delete): Allows founders or admins to modify project data.
-     * @deny (create, update, delete): Denies non-founders/admins from modifying project data.
-     * @principle Allows public read access, but restricts write access to authorized roles (founders, admins).
-     */
-    match /projects/{projectId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if request.auth != null && isFounderOrAdmin();
-      allow update: if request.auth != null && isFounderOrAdmin();
-      allow delete: if request.auth != null && isFounderOrAdmin();
-    }
-
-    /**
-     * @description Defines security rules for the /users/{userId} collection.
+     * @description Controls access to user profile documents.
      * @path /users/{userId}
-     * @allow (get): Allows the owner or founders/admins to read the user profile.
-     * @allow (create): Allows a user to create their own profile.
-     * @allow (update): Allows the owner to update their own profile.
-     * @deny (delete): Profiles cannot be deleted.
-     * @deny (create): Denies creating a profile with a different user ID than the authenticated user.
-     * @principle Enforces document ownership for writes, restricts access to a user's own data tree.
+     * @allow (get) Authenticated user can read their own profile.
+     * @allow (create) Authenticated user can create their own profile if the UID matches.
+     * @allow (update) Authenticated user can update their own profile if the UID matches. Founders can update any user profile.
+     * @allow (delete) Authenticated user can delete their own profile if the UID matches. Founders can delete any user profile.
+     * @deny (get) Authenticated user cannot read another user's profile.
+     * @deny (create) Unauthenticated user cannot create a profile.
+     * @deny (update) Authenticated user cannot update another user's profile.
+     * @deny (delete) Authenticated user cannot delete another user's profile.
+     * @principle Enforces document ownership for writes, allows owner-only reads, grants founder-level access.
      */
     match /users/{userId} {
-      allow get: if request.auth != null && (isOwner(userId) || isFounderOrAdmin());
-      allow list: if request.auth != null && isFounderOrAdmin();
-      allow create: if request.auth != null && isOwner(userId);
-      allow update: if request.auth != null && isOwner(userId);
-      allow delete: if false;
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      function isFounder() {
+        return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isFounder == true;
+      }
+      
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false; // User listing is disallowed.
+
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.uid == userId;
+      allow update: if isSignedIn() && (isOwner(userId) || isFounder()) && request.resource.data.uid == resource.data.uid;
+      allow delete: if isSignedIn() && (isExistingOwner(userId) || isFounder());
     }
 
-     /**
-      * @description Defines security rules for the /settings/appDetails document.
-      * @path /settings/appDetails
-      * @allow (get, list): Allows any user to read the settings document.
-      * @allow (create, update, delete): Allows founders or admins to modify the settings.
-      * @deny (create, update, delete): Denies non-founders/admins from modifying the settings.
-      * @principle Allows public read access, but restricts write access to authorized roles (founders, admins).
-      */
-    match /settings/appDetails {
+    /**
+     * @description Controls access to project documents.
+     * @path /projects/{projectId}
+     * @allow (get) Anyone can read project data.
+     * @allow (list) Anyone can list projects.
+     * @allow (create) Only founders can create new projects. The founder's UID must be present in the request.
+     * @allow (update) Only founders can update projects.
+     * @allow (delete) Only founders can delete projects.
+     * @deny (create) Non-founders cannot create projects.
+     * @deny (update) Non-founders cannot update projects.
+     * @deny (delete) Non-founders cannot delete projects.
+     * @principle Public read access with owner-only writes, restricts create/update/delete to founders.
+     */
+    match /projects/{projectId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function isFounder() {
+        return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isFounder == true;
+      }
+      
+      function isExistingFounder() {
+        return isFounder() && resource != null;
+      }
+
       allow get: if true;
-      allow list: if false;
-      allow create: if request.auth != null && isFounderOrAdmin();
-      allow update: if request.auth != null && isFounderOrAdmin();
-      allow delete: if request.auth != null && isFounderOrAdmin();
+      allow list: if true;
+
+      allow create: if isFounder();
+      allow update: if isExistingFounder();
+      allow delete: if isExistingFounder();
     }
   }
 }

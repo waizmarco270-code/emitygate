@@ -1,13 +1,13 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { BarChart as BarChartIcon, FileText, Globe, Users, Waypoints, Link as LinkIcon, Pencil, Trash2, PlusCircle, HardDrive, Terminal, Settings, ListTodo, BrainCircuit, Sparkles } from "lucide-react";
+import { BarChart as BarChartIcon, FileText, Globe, Users, Waypoints, Link as LinkIcon, Pencil, Trash2, PlusCircle, HardDrive, Terminal, Settings, ListTodo, BrainCircuit, Sparkles, ShieldQuestion, UserCog } from "lucide-react";
 import { Bar, BarChart as RechartsBar, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useCollection, useFirestore } from "@/firebase";
+import { useUser, useCollection, useFirestore } from "@/firebase";
 import { collection, doc, setDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import type { UserProfile } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -26,8 +26,9 @@ import { useToast } from '@/hooks/use-toast';
 import { getOrbitalProperties } from '@/lib/orbital-mechanics';
 import { useFounderConsole } from '@/context/founder-console-context';
 import Image from 'next/image';
-import { updateAppSettingsAction } from '@/lib/actions';
+import { updateUserRoleAction } from '@/lib/actions';
 import { processFounderLog, type ProcessFounderLogOutput } from '@/ai/flows/process-founder-log';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 
 const engagementData = [
@@ -201,10 +202,16 @@ const OverviewTab = () => {
     </div>
 )};
 
-const TeamMembersTab = () => {
+const TeamMembersTab = ({ onSetRoleToUpdate }: { onSetRoleToUpdate: (user: UserProfile, role: 'founder' | 'admin' | 'user') => void }) => {
     const firestore = useFirestore();
     const usersQuery = firestore ? collection(firestore, 'users') : null;
     const { data: users, loading, error } = useCollection<UserProfile>(usersQuery);
+
+    const getUserRole = (user: UserProfile) => {
+        if (user.isFounder) return 'founder';
+        if (user.isAdmin) return 'admin';
+        return 'user';
+    }
 
     if (loading) {
         return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
@@ -226,29 +233,42 @@ const TeamMembersTab = () => {
                         <TableRow>
                             <TableHead>Member</TableHead>
                             <TableHead>Email</TableHead>
-                            <TableHead>Role</TableHead>
+                            <TableHead className="text-right">Role</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {users?.map(user => (
-                            <TableRow key={user.uid}>
-                                <TableCell>
-                                    <div className="flex items-center gap-3">
-                                        <Avatar className="h-8 w-8">
-                                            <AvatarImage src={user.photoURL || undefined} />
-                                            <AvatarFallback>{user.displayName?.[0] || user.email?.[0]}</AvatarFallback>
-                                        </Avatar>
-                                        <span className="font-medium">{user.displayName || 'N/A'}</span>
-                                    </div>
-                                </TableCell>
-                                <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                                <TableCell>
-                                    {user.isFounder ? <Badge variant="destructive">Founder</Badge> : 
-                                     user.isAdmin ? <Badge variant="default">Admin</Badge> : 
-                                     <Badge variant="secondary">User</Badge>}
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                        {users?.map(user => {
+                            const currentRole = getUserRole(user);
+                            return (
+                                <TableRow key={user.uid}>
+                                    <TableCell>
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-8 w-8">
+                                                <AvatarImage src={user.photoURL || undefined} />
+                                                <AvatarFallback>{user.displayName?.[0] || user.email?.[0]}</AvatarFallback>
+                                            </Avatar>
+                                            <span className="font-medium">{user.displayName || 'N/A'}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                                    <TableCell className="text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="outline" size="sm">
+                                                    <span className="capitalize">{currentRole}</span>
+                                                    <UserCog className="ml-2 h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent>
+                                                <DropdownMenuItem onClick={() => onSetRoleToUpdate(user, 'user')}>User</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => onSetRoleToUpdate(user, 'admin')}>Admin</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => onSetRoleToUpdate(user, 'founder')}>Founder</DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
+                                </TableRow>
+                            )
+                        })}
                     </TableBody>
                 </Table>
             </CardContent>
@@ -522,9 +542,17 @@ const ProjectsTab = ({ onSetProjectToDelete }: { onSetProjectToDelete: (project:
 };
 
 export default function FounderDashboard() {
+    const { user } = useUser();
     const firestore = useFirestore();
     const { toast } = useToast();
+    
     const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+    const [roleToUpdate, setRoleToUpdate] = useState<{ user: UserProfile; role: 'founder' | 'admin' | 'user' } | null>(null);
+    const [isRoleUpdateLoading, setRoleUpdateLoading] = useState(false);
+
+    const handleSetRoleToUpdate = (user: UserProfile, role: 'founder' | 'admin' | 'user') => {
+        setRoleToUpdate({ user, role });
+    };
 
     const confirmDeleteProject = async () => {
         if (!firestore || !projectToDelete) return;
@@ -537,6 +565,26 @@ export default function FounderDashboard() {
         } finally {
             setProjectToDelete(null);
         }
+    };
+    
+    const confirmUpdateRole = async () => {
+        if (!user || !roleToUpdate) return;
+        setRoleUpdateLoading(true);
+
+        const result = await updateUserRoleAction({
+            targetUserId: roleToUpdate.user.uid,
+            role: roleToUpdate.role,
+            currentUserId: user.uid,
+        });
+
+        if (result.success) {
+            toast({ title: 'Role Updated', description: `${roleToUpdate.user.displayName || roleToUpdate.user.email}'s role has been changed to ${roleToUpdate.role}.`});
+        } else {
+            toast({ variant: 'destructive', title: 'Role Update Failed', description: result.error });
+        }
+        
+        setRoleUpdateLoading(false);
+        setRoleToUpdate(null);
     };
 
     return (
@@ -551,19 +599,22 @@ export default function FounderDashboard() {
                     <OverviewTab />
                 </TabsContent>
                 <TabsContent value="team">
-                    <TeamMembersTab />
+                    <TeamMembersTab onSetRoleToUpdate={handleSetRoleToUpdate} />
                 </TabsContent>
                 <TabsContent value="projects">
                     <ProjectsTab onSetProjectToDelete={setProjectToDelete} />
                 </TabsContent>
             </Tabs>
             
+            {/* Delete Project Dialog */}
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure you want to proceed?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        This action cannot be undone. This will permanently remove the project <span className="font-bold text-foreground">{projectToDelete?.name}</span> from the cosmos.
-                    </AlertDialogDescription>
+                    {projectToDelete && (
+                         <AlertDialogDescription>
+                            This action cannot be undone. This will permanently remove the project <span className="font-bold text-foreground">{projectToDelete?.name}</span> from the cosmos.
+                        </AlertDialogDescription>
+                    )}
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel onClick={() => setProjectToDelete(null)}>Cancel</AlertDialogCancel>
@@ -571,8 +622,29 @@ export default function FounderDashboard() {
                 </AlertDialogFooter>
             </AlertDialogContent>
 
+            {/* Update Role Dialog */}
+            <Dialog open={!!roleToUpdate} onOpenChange={() => setRoleToUpdate(null)}>
+                <DialogContent>
+                     <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2"><ShieldQuestion /> Confirm Emperor's Decree</DialogTitle>
+                        <DialogDescription>
+                            You are about to change the role of <span className="font-bold text-foreground">{roleToUpdate?.user.displayName || roleToUpdate?.user.email}</span> to <span className="font-bold text-foreground capitalize">{roleToUpdate?.role}</span>.
+                            This will grant or revoke significant permissions.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setRoleToUpdate(null)} disabled={isRoleUpdateLoading}>Cancel</Button>
+                        <Button onClick={confirmUpdateRole} disabled={isRoleUpdateLoading}>
+                            {isRoleUpdateLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                            Confirm Decree
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
         </AlertDialog>
     );
 }
 
     
+
