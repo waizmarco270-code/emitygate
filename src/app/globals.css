@@ -73,12 +73,6 @@
 }
 
 @layer utilities {
-  .glow-primary {
-    @apply shadow-[0_0_15px_theme(colors.primary)];
-  }
-  .glow-accent {
-    @apply shadow-[0_0_15px_theme(colors.accent)];
-  }
   .animate-page-enter {
     animation: page-enter 0.7s ease-out forwards;
   }
