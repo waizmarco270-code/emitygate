@@ -8,7 +8,7 @@
  * - SummarizeTeamFeedbackOutput - The return type for the summarizeTeamFeedback function.
  */
 
-import {ai} from '@/ai/genkit';
+import { ai } from '@/ai/init';
 import {z} from 'genkit';
 
 const SummarizeTeamFeedbackInputSchema = z.object({

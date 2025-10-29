@@ -9,7 +9,7 @@
  * - ProcessFounderLogOutput - The return type for the function.
  */
 
-import {ai} from '@/ai/genkit';
+import { ai } from '@/ai/init';
 import {z} from 'genkit';
 
 const ProcessFounderLogInputSchema = z.object({
