@@ -49,9 +49,7 @@ const Hero = () => {
            <div className={cn(
               "w-48 h-48 bg-primary/10 rounded-full flex items-center justify-center shadow-[0_0_60px_10px_hsl(var(--primary)/0.3)] animate-pulse-glow"
             )}>
-              <div className="w-full h-full relative">
-                <Image src="/logo.jpg" alt="EmityGate Sun" fill style={{ objectFit: 'contain'}} className="rounded-full" />
-              </div>
+               <EmityGateLogo isSun={true} />
           </div>
         </div>
 
@@ -100,10 +98,7 @@ const Hero = () => {
 
       {/* Foreground Text */}
       <div style={parallax(-0.02)} className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center pointer-events-none">
-        <h1 className="font-headline text-5xl md:text-8xl tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400">
-          <span className="font-bold text-white">EMITY</span>
-          <span className="font-light text-primary">GATE</span>
-        </h1>
+        <EmityGateLogo isTitle={true} />
         <p className="mt-4 text-lg md:text-2xl text-muted-foreground">
           Building Tomorrow’s Legends.
         </p>
