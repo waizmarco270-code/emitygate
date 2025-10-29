@@ -41,16 +41,20 @@ const ParticleBackground: React.FC = () => {
       color: string;
       baseX: number;
       baseY: number;
+      opacity: number;
+      twinkleSpeed: number;
 
       constructor(color: string) {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
         this.size = Math.random() * 2 + 1;
-        this.speedX = Math.random() * 0.6 - 0.3;
-        this.speedY = Math.random() * 0.6 - 0.3;
+        this.speedX = Math.random() * 0.4 - 0.2;
+        this.speedY = Math.random() * 0.4 - 0.2;
         this.color = color;
         this.baseX = this.x;
         this.baseY = this.y;
+        this.opacity = Math.random();
+        this.twinkleSpeed = Math.random() * 0.05;
       }
 
       update() {
@@ -78,6 +82,13 @@ const ParticleBackground: React.FC = () => {
              this.y += this.speedY;
         }
 
+        // Twinkle effect
+        this.opacity += this.twinkleSpeed;
+        if (this.opacity > 1 || this.opacity < 0) {
+            this.twinkleSpeed *= -1;
+        }
+        this.opacity = Math.max(0, Math.min(1, this.opacity));
+
 
         if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
         if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
@@ -85,10 +96,15 @@ const ParticleBackground: React.FC = () => {
 
       draw() {
         if (!ctx) return;
+        ctx.save();
+        ctx.globalAlpha = this.opacity;
         ctx.fillStyle = this.color;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = 10;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
+        ctx.restore();
       }
     }
 
@@ -111,7 +127,8 @@ const ParticleBackground: React.FC = () => {
                 let distance = Math.sqrt(dx*dx + dy*dy);
 
                 if (distance < 100) {
-                    opacityValue = 1 - (distance/100);
+                    const combinedOpacity = particles[a].opacity * particles[b].opacity;
+                    opacityValue = (1 - (distance/100)) * combinedOpacity;
                     if (!ctx) return;
                     ctx.strokeStyle = `rgba(255, 255, 255, ${opacityValue * 0.2})`;
                     ctx.lineWidth = 1;
@@ -125,6 +142,7 @@ const ParticleBackground: React.FC = () => {
     }
     
     const animate = () => {
+      if (!ctx || !canvas) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (const particle of particles) {
         particle.update();
@@ -149,7 +167,7 @@ const ParticleBackground: React.FC = () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', handleResize);
     };
-  }, [mousePosition]); // Rerun effect if mousePosition object changes
+  }, [mousePosition]); 
 
   useEffect(() => {
     // This is just to ensure the canvas is resized on initial load after hydration
@@ -160,6 +178,7 @@ const ParticleBackground: React.FC = () => {
         canvas.height = window.innerHeight;
       }
     };
+    handleResize(); // Also run it once on mount
     window.addEventListener('load', handleResize);
     return () => window.removeEventListener('load', handleResize);
   }, []);
