@@ -43,25 +43,27 @@ export const FirebaseClientProvider = ({
     setShowSplash(false);
   }
 
+  // Show splash screen on initial load
+  if (showSplash) {
+      return <SplashScreen onAnimationComplete={handleAnimationComplete} />;
+  }
+
   return (
     <FirebaseProvider value={value}>
-       <div className="flex flex-col min-h-screen">
-          {showSplash && value ? (
-            <SplashScreen onAnimationComplete={handleAnimationComplete} />
-          ) : null}
-
-          {!showSplash && value ? (
+        {value ? (
+           <div className="flex flex-col min-h-screen">
             <FounderConsoleProvider>
                 <Header />
                 <main className="flex-grow">{children}</main>
                 <Footer />
                 <FounderConsoleWrapper />
             </FounderConsoleProvider>
-          ) : !value && (
+           </div>
+        ) : (
+            // This is a fallback for the server render or if firebase fails to initialize
+            // It just shows a blank screen to avoid hydration errors.
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-background" />
-          )
-          }
-       </div>
+        )}
     </FirebaseProvider>
   );
 };
