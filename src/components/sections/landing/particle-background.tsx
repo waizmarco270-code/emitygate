@@ -24,11 +24,6 @@ const ParticleBackground: React.FC = () => {
         y: 0,
         radius: 100
     }
-
-    if(typeof window !== 'undefined') {
-        mouse.x = mousePosition.x;
-        mouse.y = mousePosition.y;
-    }
     
     const resizeCanvas = () => {
         if(typeof window !== 'undefined') {
@@ -60,6 +55,10 @@ const ParticleBackground: React.FC = () => {
 
       update() {
         if(typeof window === 'undefined') return;
+        
+        mouse.x = mousePosition.x;
+        mouse.y = mousePosition.y;
+        
         // Mouse interaction
         let dx = mouse.x - this.x;
         let dy = mouse.y - this.y;
@@ -151,11 +150,6 @@ const ParticleBackground: React.FC = () => {
       window.removeEventListener('resize', handleResize);
     };
   }, [mousePosition]); // Rerun effect if mousePosition object changes
-
-  useEffect(() => {
-    mouse.x = mousePosition.x;
-    mouse.y = mousePosition.y;
-  },[mousePosition])
 
   useEffect(() => {
     // This is just to ensure the canvas is resized on initial load after hydration
