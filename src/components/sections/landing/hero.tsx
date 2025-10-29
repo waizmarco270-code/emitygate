@@ -13,7 +13,7 @@ import type { Project } from '@/lib/projects-data';
 import { ICONS } from '@/lib/projects-data';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import EmityGateLogo from '@/components/icons/emity-gate-logo';
+import ParticleBackground from './particle-background';
 
 const Hero = () => {
   const position = useMousePosition();
@@ -39,13 +39,13 @@ const Hero = () => {
 
   return (
     <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
-      
+      <ParticleBackground />
       {/* Galaxy System */}
       <div className="relative w-full h-full flex items-center justify-center" style={parallax(0.01)}>
         {/* Central Core / Sun */}
         <div className="z-10">
            <div className={cn(
-              "w-48 h-48 bg-purple-500/30 rounded-full flex items-center justify-center shadow-[0_0_80px_20px_#9333ea,inset_0_0_20px_#e9d5ff] animate-pulse"
+              "w-48 h-48 bg-purple-500/30 rounded-full flex items-center justify-center animate-pulse-glow"
             )}>
           </div>
         </div>
@@ -95,7 +95,7 @@ const Hero = () => {
 
       {/* Foreground Text */}
       <div style={parallax(-0.02)} className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center pointer-events-none">
-        <h1 className="font-headline text-8xl tracking-widest">
+        <h1 className="font-headline text-8xl md:text-9xl tracking-widest">
             <span className="font-bold text-white">EMITY</span>
             <span className="font-light text-primary">GATE</span>
         </h1>
