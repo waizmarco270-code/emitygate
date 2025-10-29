@@ -1,3 +1,4 @@
+
 'use client';
 
 import { cn } from '@/lib/utils';
@@ -43,7 +44,6 @@ export default function SplashScreen({ onAnimationComplete }: { onAnimationCompl
        <video 
         src="/video.mp4"
         autoPlay
-        muted
         playsInline
         className="absolute top-0 left-0 w-full h-full object-cover"
         onEnded={() => setShouldAnimateOut(true)}
