@@ -43,10 +43,12 @@ export const FirebaseClientProvider = ({
     <FirebaseProvider value={value}>
       {value ? (
         <FounderConsoleProvider>
+          <div className="flex flex-col min-h-screen">
             <Header />
             <main className="flex-grow">{children}</main>
             <Footer />
             <FounderConsoleWrapper />
+          </div>
         </FounderConsoleProvider>
       ) : (
         <PageWrapper>
