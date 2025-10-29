@@ -38,7 +38,8 @@ export default function SplashScreen({ onAnimationComplete }: { onAnimationCompl
       )}
     >
        {/* === VIDEO PLACEHOLDER === */}
-       {/* Replace the video.mp4 file in the /public folder with your own video. */}
+       {/* Create a 'public' folder in the root of your project. */}
+       {/* Place your video file named 'video.mp4' inside the 'public' folder. */}
        <video 
         src="/video.mp4"
         autoPlay
