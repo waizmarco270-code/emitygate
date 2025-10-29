@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { firebaseConfig } from '@/firebase/config';
 import { initializeFirebase, FirebaseServices } from '@/firebase';
 import { FirebaseProvider } from './provider';
@@ -9,8 +9,7 @@ import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
 import { FounderConsoleProvider } from '@/context/founder-console-context';
 import FounderConsoleWrapper from '@/components/founder-console-wrapper';
-import PageWrapper from '@/components/page-wrapper';
-import { Loader2 } from 'lucide-react';
+import SplashScreen from '@/components/layout/splash-screen';
 
 // This is a singleton pattern to ensure Firebase is initialized only once.
 let firebaseServices: FirebaseServices | null = null;
@@ -28,6 +27,8 @@ export const FirebaseClientProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
+  const [showSplash, setShowSplash] = useState(true);
+
   // `useMemo` ensures this only runs once per client session.
   const value = useMemo(() => {
     // We only want to initialize firebase on the client
@@ -38,25 +39,29 @@ export const FirebaseClientProvider = ({
     return null;
   }, []);
 
+  const handleAnimationComplete = () => {
+    setShowSplash(false);
+  }
 
   return (
-     <div className="flex flex-col min-h-screen">
-      <FirebaseProvider value={value}>
-        {value ? (
-          <FounderConsoleProvider>
-              <Header />
-              <main className="flex-grow">{children}</main>
-              <Footer />
-              <FounderConsoleWrapper />
-          </FounderConsoleProvider>
-        ) : (
-          <PageWrapper>
-            <main className="container mx-auto py-12 flex justify-center items-center h-[80vh]">
-              <Loader2 className="h-16 w-16 animate-spin text-primary" />
-            </main>
-          </PageWrapper>
-        )}
-      </FirebaseProvider>
-    </div>
+    <FirebaseProvider value={value}>
+       <div className="flex flex-col min-h-screen">
+          {showSplash && value ? (
+            <SplashScreen onAnimationComplete={handleAnimationComplete} />
+          ) : null}
+
+          {!showSplash && value ? (
+            <FounderConsoleProvider>
+                <Header />
+                <main className="flex-grow">{children}</main>
+                <Footer />
+                <FounderConsoleWrapper />
+            </FounderConsoleProvider>
+          ) : !value && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-background" />
+          )
+          }
+       </div>
+    </FirebaseProvider>
   );
 };
