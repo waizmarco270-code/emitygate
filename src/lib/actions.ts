@@ -117,11 +117,11 @@ export async function updateUserRoleAction(data: {targetUserId: string, role: 'f
 
 export async function getEnvContentAction(): Promise<string | null> {
   try {
-    const filePath = path.join(process.cwd(), '.env.example');
+    const filePath = path.join(process.cwd(), '.env.local');
     const content = await fs.readFile(filePath, 'utf-8');
     return content;
   } catch (error) {
-    console.error("Failed to read .env.example file:", error);
-    return null;
+    console.error("Failed to read .env.local file:", error);
+    return "Error: Could not read .env.local file. Ensure it exists in the project root.";
   }
 }
