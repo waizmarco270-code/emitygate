@@ -4,7 +4,7 @@
 import { cn } from '@/lib/utils';
 import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Volume2 } from 'lucide-react';
+import { SkipForward, Volume2 } from 'lucide-react';
 
 export default function SplashScreen({ onAnimationComplete }: { onAnimationComplete: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -14,7 +14,7 @@ export default function SplashScreen({ onAnimationComplete }: { onAnimationCompl
   useEffect(() => {
     // This is a failsafe to ensure animation completes if the user doesn't interact.
     const failsafeTimer = setTimeout(() => {
-      setShouldAnimateOut(true);
+      handleExit();
     }, videoDuration);
 
     return () => {
@@ -32,10 +32,9 @@ export default function SplashScreen({ onAnimationComplete }: { onAnimationCompl
       }
   }, [shouldAnimateOut, onAnimationComplete]);
 
-  const handleEnter = () => {
-    if (videoRef.current) {
+  const handleExit = (unmute = false) => {
+    if (unmute && videoRef.current) {
         videoRef.current.muted = false;
-        videoRef.current.play(); // Re-ensure play in case it was paused
     }
     setShouldAnimateOut(true);
   }
@@ -48,7 +47,6 @@ export default function SplashScreen({ onAnimationComplete }: { onAnimationCompl
         shouldAnimateOut ? "opacity-0" : "opacity-100"
       )}
     >
-       {/* Ensure 'public' folder exists in the root and contains 'video.mp4'. */}
        <video 
         ref={videoRef}
         src="/video.mp4"
@@ -58,18 +56,26 @@ export default function SplashScreen({ onAnimationComplete }: { onAnimationCompl
         muted // Start muted to guarantee autoplay
         className="absolute top-0 left-0 w-full h-full object-cover"
        />
-       {/* The overlay provides a nice vignette effect */}
        <div className="absolute inset-0 bg-black/30" />
        
-       <div className="relative z-10 animate-pulse">
+       <div className="relative z-10 flex flex-col items-center gap-4">
             <Button 
                 variant="outline"
                 size="lg"
-                className="bg-black/50 border-white/50 text-white backdrop-blur-md hover:bg-white/20 hover:text-white"
-                onClick={handleEnter}
+                className="bg-black/50 border-white/50 text-white backdrop-blur-md hover:bg-white/20 hover:text-white animate-pulse"
+                onClick={() => handleExit(true)}
             >
                 <Volume2 className="mr-2" />
                 Enter with Sound
+            </Button>
+             <Button
+                variant="ghost"
+                size="sm"
+                className="text-white/70 hover:text-white hover:bg-white/10"
+                onClick={() => handleExit(false)}
+            >
+                <SkipForward className="mr-2" />
+                Skip
             </Button>
        </div>
     </div>
