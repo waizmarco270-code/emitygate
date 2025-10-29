@@ -2,9 +2,11 @@
 'use client';
 
 import React, { useRef, useEffect } from 'react';
+import { useMousePosition } from '@/hooks/use-mouse-position';
 
 const ParticleBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mousePosition = useMousePosition();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -15,7 +17,12 @@ const ParticleBackground: React.FC = () => {
     
     let animationFrameId: number;
     let particles: Particle[] = [];
-    const particleCount = 100;
+    const particleCount = 150;
+    const mouse = {
+        x: mousePosition.x,
+        y: mousePosition.y,
+        radius: 100
+    }
     
     const resizeCanvas = () => {
         canvas.width = window.innerWidth;
@@ -29,19 +36,40 @@ const ParticleBackground: React.FC = () => {
       speedX: number;
       speedY: number;
       color: string;
+      baseX: number;
+      baseY: number;
 
       constructor(color: string) {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
         this.size = Math.random() * 2 + 1;
-        this.speedX = Math.random() * 0.4 - 0.2;
-        this.speedY = Math.random() * 0.4 - 0.2;
+        this.speedX = Math.random() * 0.6 - 0.3;
+        this.speedY = Math.random() * 0.6 - 0.3;
         this.color = color;
+        this.baseX = this.x;
+        this.baseY = this.y;
       }
 
       update() {
-        this.x += this.speedX;
-        this.y += this.speedY;
+        // Mouse interaction
+        let dx = mouse.x - this.x;
+        let dy = mouse.y - this.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        let forceDirectionX = dx / distance;
+        let forceDirectionY = dy / distance;
+        let maxDistance = mouse.radius;
+        let force = (maxDistance - distance) / maxDistance;
+        let directionX = forceDirectionX * force * this.size * 0.5;
+        let directionY = forceDirectionY * force * this.size * 0.5;
+
+        if (distance < mouse.radius) {
+            this.x -= directionX;
+            this.y -= directionY;
+        } else {
+             this.x += this.speedX;
+             this.y += this.speedY;
+        }
+
 
         if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
         if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
@@ -66,32 +94,35 @@ const ParticleBackground: React.FC = () => {
       }
     };
 
-    const handleParticles = () => {
-      for (let i = 0; i < particles.length; i++) {
-        particles[i].update();
-        particles[i].draw();
+    const connect = () => {
+        let opacityValue = 1;
+        for (let a = 0; a < particles.length; a++) {
+            for (let b = a; b < particles.length; b++) {
+                let dx = particles[a].x - particles[b].x;
+                let dy = particles[a].y - particles[b].y;
+                let distance = Math.sqrt(dx*dx + dy*dy);
 
-        for (let j = i; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          if (distance < 100) {
-            if (!ctx) return;
-            ctx.beginPath();
-            ctx.strokeStyle = particles[i].color;
-            ctx.lineWidth = 0.2;
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.stroke();
-            ctx.closePath();
-          }
+                if (distance < 100) {
+                    opacityValue = 1 - (distance/100);
+                    if (!ctx) return;
+                    ctx.strokeStyle = `hsla(${getComputedStyle(document.documentElement).getPropertyValue('--primary')}, ${opacityValue})`;
+                    ctx.lineWidth = 0.2;
+                    ctx.beginPath();
+                    ctx.moveTo(particles[a].x, particles[a].y);
+                    ctx.lineTo(particles[b].x, particles[b].y);
+                    ctx.stroke();
+                }
+            }
         }
-      }
-    };
+    }
     
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      handleParticles();
+      for (const particle of particles) {
+        particle.update();
+        particle.draw();
+      }
+      connect();
       animationFrameId = requestAnimationFrame(animate);
     };
 
@@ -99,15 +130,30 @@ const ParticleBackground: React.FC = () => {
     init();
     animate();
 
-    window.addEventListener('resize', () => {
+    const handleResize = () => {
         resizeCanvas();
         init();
-    });
+    };
+
+    window.addEventListener('resize', handleResize);
 
     return () => {
       cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('resize', resizeCanvas);
+      window.removeEventListener('resize', handleResize);
     };
+  }, [mousePosition]); // Rerun effect if mousePosition object changes
+
+  useEffect(() => {
+    // This is just to ensure the canvas is resized on initial load after hydration
+    const handleResize = () => {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+    };
+    window.addEventListener('load', handleResize);
+    return () => window.removeEventListener('load', handleResize);
   }, []);
 
   return (
