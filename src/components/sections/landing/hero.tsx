@@ -14,7 +14,6 @@ import { ICONS } from '@/lib/projects-data';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ParticleBackground from './particle-background';
-import EmityGateLogo from '@/components/icons/emity-gate-logo';
 
 const Hero = () => {
   const position = useMousePosition();
@@ -38,8 +37,8 @@ const Hero = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const sunProject = projectsData?.find(p => p.id === 'emity-gate-core');
-  const orbitingProjects = projectsData?.filter(p => p.id !== 'emity-gate-core');
+  const sunProject = projectsData?.find(p => p.tier === 'core');
+  const orbitingProjects = projectsData?.filter(p => p.tier !== 'core');
 
   return (
     <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
@@ -91,7 +90,7 @@ const Hero = () => {
               {sunProject.iconImage ? (
                 <Image src={sunProject.iconImage} alt={sunProject.name} layout="fill" objectFit="cover" className="rounded-full" />
               ) : (
-                <EmityGateLogo className="text-4xl" />
+                <span className="font-headline text-3xl text-white tracking-widest">{sunProject.name}</span>
               )}
             </div>
           )}
@@ -170,3 +169,5 @@ const Hero = () => {
 };
 
 export default Hero;
+
+    

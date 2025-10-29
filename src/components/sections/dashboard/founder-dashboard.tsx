@@ -23,7 +23,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { getOrbitalProperties } from '@/lib/orbital-mechanics';
+import { getOrbitalProperties, type OrbitalTier } from '@/lib/orbital-mechanics';
 import { useFounderConsole } from '@/context/founder-console-context';
 import Image from 'next/image';
 import { updateUserRoleAction } from '@/lib/actions';
@@ -146,7 +146,7 @@ const OverviewTab = () => {
                 <HardDrive className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-4xl font-bold font-headline">{projectsData ? projectsData.filter(p=>p.id !== 'emity-gate-core').length : <Loader2 className="h-8 w-8 animate-spin" />}</div>
+                <div className="text-4xl font-bold font-headline">{projectsData ? projectsData.filter(p=>p.tier !== 'core').length : <Loader2 className="h-8 w-8 animate-spin" />}</div>
                 <p className="text-xs text-muted-foreground">2 initiatives in R&D</p>
             </CardContent>
         </Card>
@@ -297,6 +297,9 @@ const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project>
 
     const handleSelectChange = (name: string) => (value: string) => {
         setFormData(prev => ({ ...prev, [name]: value }));
+        if (name === 'tier' && value === 'core') {
+            setFormData(prev => ({ ...prev, sizePreset: 'extra-large' }));
+        }
     }
 
     const handleSliderChange = (name: string) => (value: number[]) => {
@@ -319,13 +322,13 @@ const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project>
         onSave(formData);
     }
     
-    const isCoreProject = project?.id === 'emity-gate-core';
+    const isSun = formData.tier === 'core';
 
     return (
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6 p-1 max-h-[70vh] overflow-y-auto">
             <div className="space-y-2">
                 <Label htmlFor="name">Project Name</Label>
-                <Input id="name" name="name" value={formData.name} onChange={handleChange} required disabled={isCoreProject} />
+                <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
             </div>
             <div className="space-y-2">
                 <Label htmlFor="url">URL</Label>
@@ -336,7 +339,7 @@ const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project>
                 <Textarea id="description" name="description" value={formData.description} onChange={handleChange} required />
             </div>
              <div className="space-y-2">
-                <Label htmlFor="iconImage">{isCoreProject ? 'Sun Core Image' : 'Icon Image'}</Label>
+                <Label htmlFor="iconImage">{isSun ? 'Sun Core Image' : 'Icon Image'}</Label>
                 <Input id="iconImage" name="iconImage" type="file" onChange={handleFileChange} accept="image/*" />
                  {formData.iconImage && <div className="w-16 h-16 mt-2 relative"><Image src={formData.iconImage} alt="icon preview" layout="fill" objectFit="cover" className="rounded-md"/></div>}
             </div>
@@ -360,10 +363,10 @@ const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project>
             </div>
              <div className="space-y-2">
                 <Label htmlFor="tier">Orbital Tier</Label>
-                <Select name="tier" value={formData.tier} onValueChange={handleSelectChange('tier')} disabled={isCoreProject}>
+                <Select name="tier" value={formData.tier} onValueChange={handleSelectChange('tier')}>
                     <SelectTrigger><SelectValue placeholder="Select a tier" /></SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="core">Core</SelectItem>
+                        <SelectItem value="core">Sun</SelectItem>
                         <SelectItem value="inner">Inner Ring</SelectItem>
                         <SelectItem value="outer">Outer Ring</SelectItem>
                     </SelectContent>
@@ -371,7 +374,7 @@ const ProjectForm = ({ project, onSave, onCancel }: { project?: Partial<Project>
             </div>
              <div className="space-y-2">
                 <Label htmlFor="sizePreset">Planet Size</Label>
-                <Select name="sizePreset" value={formData.sizePreset} onValueChange={handleSelectChange('sizePreset')} disabled={isCoreProject}>
+                <Select name="sizePreset" value={formData.sizePreset} onValueChange={handleSelectChange('sizePreset')} disabled={isSun}>
                     <SelectTrigger><SelectValue placeholder="Select a size" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="small">Small</SelectItem>
@@ -406,8 +409,11 @@ const ProjectsTab = ({ onSetProjectToDelete }: { onSetProjectToDelete: (project:
     const handleSaveProject = async (projectData: Partial<Project>) => {
         if (!firestore) return;
         
-        const isCoreProject = projectData.id === 'emity-gate-core';
-        const orbitalProperties = isCoreProject ? { orbit: 0, speed: 0, angle: 0, size: 192 } : getOrbitalProperties(projectData.tier, projectData.sizePreset);
+        const isSun = projectData.tier === 'core';
+        const tier = projectData.tier as OrbitalTier;
+        const sizePreset = isSun ? 'extra-large' : (projectData.sizePreset || 'medium');
+        
+        const orbitalProperties = getOrbitalProperties(tier, sizePreset);
 
         const projectToSave: Omit<Project, 'id'> = {
             name: projectData.name!,
@@ -416,8 +422,8 @@ const ProjectsTab = ({ onSetProjectToDelete }: { onSetProjectToDelete: (project:
             iconImage: projectData.iconImage || '',
             color: projectData.color!,
             url: projectData.url!,
-            tier: projectData.tier!,
-            sizePreset: projectData.sizePreset!,
+            tier: tier,
+            sizePreset: sizePreset,
             glowIntensity: projectData.glowIntensity || 5,
             ...orbitalProperties,
         };
@@ -488,7 +494,7 @@ const ProjectsTab = ({ onSetProjectToDelete }: { onSetProjectToDelete: (project:
                             <TableBody>
                                 {projects.map((project) => {
                                     const Icon = ICONS[project.icon] || LinkIcon;
-                                    const isCoreProject = project.id === 'emity-gate-core';
+                                    const isSun = project.tier === 'core';
                                     return (
                                         <TableRow key={project.id}>
                                             <TableCell>
@@ -501,7 +507,7 @@ const ProjectsTab = ({ onSetProjectToDelete }: { onSetProjectToDelete: (project:
                                                         )}
                                                     </div>
                                                     <span className="font-medium">{project.name}</span>
-                                                    {isCoreProject && <Badge>Sun</Badge>}
+                                                    {isSun && <Badge>Sun</Badge>}
                                                 </div>
                                             </TableCell>
                                             <TableCell>
@@ -515,7 +521,7 @@ const ProjectsTab = ({ onSetProjectToDelete }: { onSetProjectToDelete: (project:
                                                 <Button variant="ghost" size="icon" onClick={() => { setEditingProject(project); setFormOpen(true); }}>
                                                     <Pencil className="h-4 w-4" />
                                                 </Button>
-                                                {!isCoreProject && (
+                                                {!isSun && (
                                                     <AlertDialogTrigger asChild>
                                                         <Button variant="ghost" size="icon" className="text-destructive" onClick={() => onSetProjectToDelete(project)}>
                                                             <Trash2 className="h-4 w-4" />
@@ -664,5 +670,7 @@ export default function FounderDashboard() {
         </AlertDialog>
     );
 }
+
+    
 
     
