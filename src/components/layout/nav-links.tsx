@@ -29,7 +29,9 @@ const NavLinks = () => {
   const userProfileRef = user && firestore ? doc(firestore, 'users', user.uid) : null;
   const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
 
-  const linksToRender = user ? authenticatedLinks : publicLinks;
+  const linksToRender = user 
+    ? [...publicLinks, ...authenticatedLinks] 
+    : publicLinks;
 
   return (
     <>
