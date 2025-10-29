@@ -12,7 +12,6 @@ import { collection } from 'firebase/firestore';
 import type { Project } from '@/lib/projects-data';
 import { ICONS } from '@/lib/projects-data';
 import { Loader2 } from 'lucide-react';
-import GalaxyBackground from './galaxy-background';
 import { cn } from '@/lib/utils';
 import EmityGateLogo from '@/components/icons/emity-gate-logo';
 
@@ -40,7 +39,7 @@ const Hero = () => {
 
   return (
     <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
-      <GalaxyBackground />
+      <div className="absolute inset-0 z-0 bg-background" />
       
       {/* Galaxy System */}
       <div className="relative w-full h-full flex items-center justify-center" style={parallax(0.01)}>
@@ -49,7 +48,7 @@ const Hero = () => {
            <div className={cn(
               "w-48 h-48 bg-primary/10 rounded-full flex items-center justify-center shadow-[0_0_60px_10px_hsl(var(--primary)/0.3)] animate-pulse-glow"
             )}>
-               <EmityGateLogo isSun={true} />
+               <EmityGateLogo />
           </div>
         </div>
 
