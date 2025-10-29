@@ -42,6 +42,35 @@ const Hero = () => {
       <ParticleBackground />
       {/* Galaxy System */}
       <div className="relative w-full h-full flex items-center justify-center" style={parallax(0.01)}>
+        
+        {/* Orbits */}
+        <svg className="absolute w-full h-full pointer-events-none" viewBox="0 0 1000 1000">
+            <defs>
+                <filter id="glow">
+                    <feGaussianBlur stdDeviation="3.5" result="coloredBlur" />
+                    <feMerge>
+                        <feMergeNode in="coloredBlur" />
+                        <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                </filter>
+            </defs>
+            <g transform="translate(500, 500)">
+                {projectsData?.map((p) => (
+                     <circle
+                        key={`orbit-${p.id}`}
+                        cx="0"
+                        cy="0"
+                        r={p.orbit}
+                        fill="none"
+                        stroke="hsl(var(--primary) / 0.1)"
+                        strokeWidth="1"
+                        strokeDasharray="4 8"
+                        className="animate-pulse-glow"
+                     />
+                ))}
+            </g>
+        </svg>
+
         {/* Central Core / Sun */}
         <div className="z-10">
            <div className={cn(
