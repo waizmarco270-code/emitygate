@@ -67,6 +67,9 @@
   body {
     @apply bg-background text-foreground;
   }
+  .dark body {
+    background: radial-gradient(ellipse at center, hsl(0 0% 10%), hsl(0 0% 4%));
+  }
 }
 
 @layer utilities {
@@ -112,4 +115,3 @@
       inset 0 0 15px hsl(var(--primary) / 0.1);
   }
 }
-

@@ -39,16 +39,14 @@ const Hero = () => {
 
   return (
     <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
-      <div className="absolute inset-0 z-0 bg-background" />
       
       {/* Galaxy System */}
       <div className="relative w-full h-full flex items-center justify-center" style={parallax(0.01)}>
         {/* Central Core / Sun */}
         <div className="z-10">
            <div className={cn(
-              "w-48 h-48 bg-primary/10 rounded-full flex items-center justify-center shadow-[0_0_60px_10px_hsl(var(--primary)/0.3)] animate-pulse-glow"
+              "w-48 h-48 bg-purple-500/30 rounded-full flex items-center justify-center shadow-[0_0_80px_20px_#9333ea,inset_0_0_20px_#e9d5ff] animate-pulse"
             )}>
-               <EmityGateLogo />
           </div>
         </div>
 
@@ -78,7 +76,7 @@ const Hero = () => {
                   width: p.size,
                   height: p.size,
                   backgroundColor: p.color,
-                  boxShadow: `0 0 20px ${p.color}, inset 0 0 10px rgba(255,255,255,0.3)`,
+                  boxShadow: `0 0 20px ${p.color}, 0 0 40px ${p.color}80, inset 0 0 10px rgba(255,255,255,0.3)`,
                 }}
               >
                 {p.iconImage ? (
@@ -97,7 +95,10 @@ const Hero = () => {
 
       {/* Foreground Text */}
       <div style={parallax(-0.02)} className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center pointer-events-none">
-        <EmityGateLogo isTitle={true} />
+        <h1 className="font-headline text-8xl tracking-widest">
+            <span className="font-bold text-white">EMITY</span>
+            <span className="font-light text-primary">GATE</span>
+        </h1>
         <p className="mt-4 text-lg md:text-2xl text-muted-foreground">
           Building Tomorrow’s Legends.
         </p>
