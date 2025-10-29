@@ -3,8 +3,7 @@
 
 import { z } from 'zod';
 import { aiApplicationReview } from '@/ai/flows/ai-application-review';
-import { getAdminFirestore } from '@/firebase/admin';
-import { getAuth } from 'firebase-admin/auth';
+import { getAdminFirestore, getAdminAuth } from '@/firebase/admin';
 import type { UserProfile } from './types';
 
 const formSchema = z.object({
@@ -101,7 +100,7 @@ export async function updateUserRoleAction(data: {targetUserId: string, role: 'f
     await targetUserRef.update(newRoles);
 
     // Update custom claims for auth-based rules if needed in future
-    await getAuth().setCustomUserClaims(targetUserId, {
+    await getAdminAuth().setCustomUserClaims(targetUserId, {
       isAdmin: newRoles.isAdmin,
       isFounder: newRoles.isFounder,
     });

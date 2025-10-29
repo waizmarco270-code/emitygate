@@ -1,21 +1,50 @@
 
 import * as admin from 'firebase-admin';
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
+// This function safely parses the service account JSON.
+const getServiceAccount = () => {
+    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+    if (!serviceAccountJson) {
+        // Log a warning if the service account is missing, but don't throw an error
+        // during build time, as Vercel injects it at runtime.
+        console.warn('FIREBASE_SERVICE_ACCOUNT environment variable is not set. This is expected during local build, but should be set in production.');
+        return null;
+    }
+    try {
+        return JSON.parse(serviceAccountJson);
+    } catch (e) {
+        console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:', e);
+        return null;
+    }
+};
 
-if (!serviceAccount) {
-    throw new Error('Missing FIREBASE_SERVICE_ACCOUNT environment variable');
-}
-
+// Initialize Firebase Admin only if it hasn't been initialized yet.
 if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(JSON.parse(serviceAccount)),
-    storageBucket: "studio-3948310678-9a7f7.appspot.com"
-  });
+  const serviceAccount = getServiceAccount();
+  if (serviceAccount) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    });
+  }
 }
 
-const firestore = admin.firestore();
-const storage = admin.storage();
+const firestore = admin.apps.length ? admin.firestore() : null;
+const storage = admin.apps.length ? admin.storage() : null;
+const auth = admin.apps.length ? admin.auth() : null;
 
-export const getAdminFirestore = () => firestore;
-export const getAdminStorage = () => storage;
+// Export getters that check for initialization.
+export const getAdminFirestore = () => {
+  if (!firestore) throw new Error('Firebase Admin (Firestore) has not been initialized.');
+  return firestore;
+};
+
+export const getAdminStorage = () => {
+    if (!storage) throw new Error('Firebase Admin (Storage) has not been initialized.');
+    return storage;
+};
+
+export const getAdminAuth = () => {
+    if (!auth) throw new Error('Firebase Admin (Auth) has not been initialized.');
+    return auth;
+};
