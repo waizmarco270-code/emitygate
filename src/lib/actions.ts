@@ -52,7 +52,7 @@ const vaultPassphraseSchema = z.string();
 export async function checkVaultPassphrase(passphrase: string) {
   try {
     const validatedPassphrase = vaultPassphraseSchema.parse(passphrase);
-    const correctPassphrase = "A PURE MASTERPIECE IS ALWAYS A PURE MASTERPIECE 🌹";
+    const correctPassphrase = "waizdev@vault";
 
     if (validatedPassphrase === correctPassphrase) {
         return { success: true, error: null };
