@@ -40,23 +40,23 @@ export const FirebaseClientProvider = ({
 
 
   return (
-    <FirebaseProvider value={value}>
-      {value ? (
-        <FounderConsoleProvider>
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-grow">{children}</main>
-            <Footer />
-            <FounderConsoleWrapper />
-          </div>
-        </FounderConsoleProvider>
-      ) : (
-        <PageWrapper>
-          <main className="container mx-auto py-12 flex justify-center items-center h-[80vh]">
-            <Loader2 className="h-16 w-16 animate-spin text-primary" />
-          </main>
-        </PageWrapper>
-      )}
-    </FirebaseProvider>
+     <div className="flex flex-col min-h-screen">
+      <FirebaseProvider value={value}>
+        {value ? (
+          <FounderConsoleProvider>
+              <Header />
+              <main className="flex-grow">{children}</main>
+              <Footer />
+              <FounderConsoleWrapper />
+          </FounderConsoleProvider>
+        ) : (
+          <PageWrapper>
+            <main className="container mx-auto py-12 flex justify-center items-center h-[80vh]">
+              <Loader2 className="h-16 w-16 animate-spin text-primary" />
+            </main>
+          </PageWrapper>
+        )}
+      </FirebaseProvider>
+    </div>
   );
 };
