@@ -3,32 +3,19 @@
 
 import { cn } from '@/lib/utils';
 import { useEffect, useState, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Volume2 } from 'lucide-react';
 
 export default function SplashScreen({ onAnimationComplete }: { onAnimationComplete: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [shouldAnimateOut, setShouldAnimateOut] = useState(false);
-  const videoDuration = 8000; // 8 seconds
+  const videoDuration = 8000; // 8 seconds, as a fallback
 
   useEffect(() => {
-    // This is a failsafe to ensure animation completes.
-    // It should match the video's length.
+    // This is a failsafe to ensure animation completes if the user doesn't interact.
     const failsafeTimer = setTimeout(() => {
       setShouldAnimateOut(true);
     }, videoDuration);
-
-    // Attempt to play and unmute the video
-    if (videoRef.current) {
-      videoRef.current.play().then(() => {
-        // Autoplay started successfully
-        if (videoRef.current) {
-          videoRef.current.muted = false;
-        }
-      }).catch(error => {
-        // Autoplay was prevented. This is common.
-        // The video will continue playing silently.
-        console.error("Video autoplay with sound was prevented:", error);
-      });
-    }
 
     return () => {
         clearTimeout(failsafeTimer);
@@ -44,6 +31,14 @@ export default function SplashScreen({ onAnimationComplete }: { onAnimationCompl
           return () => clearTimeout(animationEndTimer);
       }
   }, [shouldAnimateOut, onAnimationComplete]);
+
+  const handleEnter = () => {
+    if (videoRef.current) {
+        videoRef.current.muted = false;
+        videoRef.current.play(); // Re-ensure play in case it was paused
+    }
+    setShouldAnimateOut(true);
+  }
   
 
   return (
@@ -53,19 +48,30 @@ export default function SplashScreen({ onAnimationComplete }: { onAnimationCompl
         shouldAnimateOut ? "opacity-0" : "opacity-100"
       )}
     >
-       {/* Create a 'public' folder in the root of your project. */}
-       {/* Place your video file named 'video.mp4' inside the 'public' folder. */}
+       {/* Ensure 'public' folder exists in the root and contains 'video.mp4'. */}
        <video 
         ref={videoRef}
         src="/video.mp4"
         autoPlay
+        loop
         playsInline
-        muted // Start muted to allow autoplay across all browsers
+        muted // Start muted to guarantee autoplay
         className="absolute top-0 left-0 w-full h-full object-cover"
-        onEnded={() => setShouldAnimateOut(true)}
        />
        {/* The overlay provides a nice vignette effect */}
        <div className="absolute inset-0 bg-black/30" />
+       
+       <div className="relative z-10 animate-pulse">
+            <Button 
+                variant="outline"
+                size="lg"
+                className="bg-black/50 border-white/50 text-white backdrop-blur-md hover:bg-white/20 hover:text-white"
+                onClick={handleEnter}
+            >
+                <Volume2 className="mr-2" />
+                Enter with Sound
+            </Button>
+       </div>
     </div>
   );
 }
