@@ -2,10 +2,10 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 export default function SplashScreen({ onAnimationComplete }: { onAnimationComplete: () => void }) {
-
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [shouldAnimateOut, setShouldAnimateOut] = useState(false);
   const videoDuration = 8000; // 8 seconds
 
@@ -15,6 +15,20 @@ export default function SplashScreen({ onAnimationComplete }: { onAnimationCompl
     const failsafeTimer = setTimeout(() => {
       setShouldAnimateOut(true);
     }, videoDuration);
+
+    // Attempt to play and unmute the video
+    if (videoRef.current) {
+      videoRef.current.play().catch(error => {
+        // Autoplay was prevented.
+        console.error("Video autoplay was prevented:", error);
+      });
+      // Unmute after a very short delay
+      setTimeout(() => {
+        if(videoRef.current) {
+          videoRef.current.muted = false;
+        }
+      }, 100);
+    }
 
     return () => {
         clearTimeout(failsafeTimer);
@@ -42,9 +56,11 @@ export default function SplashScreen({ onAnimationComplete }: { onAnimationCompl
        {/* Create a 'public' folder in the root of your project. */}
        {/* Place your video file named 'video.mp4' inside the 'public' folder. */}
        <video 
+        ref={videoRef}
         src="/video.mp4"
         autoPlay
         playsInline
+        muted // Start muted to allow autoplay
         className="absolute top-0 left-0 w-full h-full object-cover"
         onEnded={() => setShouldAnimateOut(true)}
        />
