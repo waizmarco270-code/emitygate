@@ -1,4 +1,3 @@
-
 'use client';
 
 import { cn } from '@/lib/utils';
@@ -7,30 +6,26 @@ import { useEffect, useState } from 'react';
 export default function SplashScreen({ onAnimationComplete }: { onAnimationComplete: () => void }) {
 
   const [shouldAnimateOut, setShouldAnimateOut] = useState(false);
+  const videoDuration = 8000; // 8 seconds
 
   useEffect(() => {
-    // This is a failsafe to ensure animation completes even if video metadata loading is slow.
+    // This is a failsafe to ensure animation completes.
+    // It should match the video's length.
     const failsafeTimer = setTimeout(() => {
       setShouldAnimateOut(true);
-    }, 4000); // Wait 4 seconds before forcing the fade out.
-
-    // The primary trigger for fading out.
-    const readyTimer = setTimeout(() => {
-        setShouldAnimateOut(true);
-    }, 2500); // Start fade-out after 2.5 seconds.
-
+    }, videoDuration);
 
     return () => {
         clearTimeout(failsafeTimer);
-        clearTimeout(readyTimer);
     };
   }, []);
   
   useEffect(() => {
       if (shouldAnimateOut) {
+          // This timer should match the CSS transition duration.
           const animationEndTimer = setTimeout(() => {
               onAnimationComplete();
-          }, 1000); // Corresponds to the animation duration
+          }, 1000); // Corresponds to the opacity transition duration.
           return () => clearTimeout(animationEndTimer);
       }
   }, [shouldAnimateOut, onAnimationComplete]);
@@ -43,14 +38,14 @@ export default function SplashScreen({ onAnimationComplete }: { onAnimationCompl
       )}
     >
        {/* === VIDEO PLACEHOLDER === */}
-       {/* Replace the src below with your own video file. */}
+       {/* Replace the video.mp4 file in the /public folder with your own video. */}
        <video 
-        src="https://cdn.pixabay.com/video/2022/10/06/133453-760773611_large.mp4"
+        src="/video.mp4"
         autoPlay
         muted
-        loop
         playsInline
         className="absolute top-0 left-0 w-full h-full object-cover"
+        onEnded={() => setShouldAnimateOut(true)}
        />
        {/* The overlay provides a nice vignette effect */}
        <div className="absolute inset-0 bg-black/30" />
