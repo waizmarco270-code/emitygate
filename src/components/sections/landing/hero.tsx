@@ -1,12 +1,12 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useMousePosition } from '@/hooks/use-mouse-position';
 import { Button } from '@/components/ui/button';
-import { ArrowDown, Loader2, Maximize, Minimize } from 'lucide-react';
+import { ArrowDown, Loader2 } from 'lucide-react';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { Project } from '@/lib/projects-data';
@@ -17,7 +17,6 @@ import ParticleBackground from './particle-background';
 const Hero = () => {
   const position = useMousePosition();
   const firestore = useFirestore();
-  const [isImmersive, setIsImmersive] = useState(false);
 
   const projectsQuery = firestore ? collection(firestore, 'projects') : null;
   const { data: projectsData, loading: projectsLoading } = useCollection<Project>(projectsQuery);
@@ -41,22 +40,8 @@ const Hero = () => {
   const orbitingProjects = projectsData?.filter(p => p.tier !== 'core');
 
   return (
-    <section className={cn(
-        "relative w-full flex items-center justify-center overflow-hidden h-[120vh]",
-        isImmersive && "fixed inset-0 z-50 h-screen"
-      )}>
+    <section className="relative w-full flex items-center justify-center overflow-hidden h-[120vh]">
       <ParticleBackground />
-
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute top-20 right-4 z-40 text-muted-foreground hover:text-white"
-        onClick={() => setIsImmersive(!isImmersive)}
-      >
-        {isImmersive ? <Minimize /> : <Maximize />}
-        <span className="sr-only">{isImmersive ? 'Exit Immersive Mode' : 'Enter Immersive Mode'}</span>
-      </Button>
-
 
       {/* Galaxy System */}
       <div className="relative w-full h-full flex items-center justify-center" style={parallax(0.01)}>
