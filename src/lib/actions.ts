@@ -5,6 +5,8 @@ import { z } from 'zod';
 import { aiApplicationReview } from '@/ai/flows/ai-application-review';
 import { getAdminFirestore, getAdminAuth } from '@/firebase/admin';
 import type { UserProfile } from './types';
+import fs from 'fs/promises';
+import path from 'path';
 
 const formSchema = z.object({
   jobDescription: z.string(),
@@ -50,7 +52,7 @@ const vaultPassphraseSchema = z.string();
 export async function checkVaultPassphrase(passphrase: string) {
   try {
     const validatedPassphrase = vaultPassphraseSchema.parse(passphrase);
-    const correctPassphrase = "empire";
+    const correctPassphrase = "A PURE MASTERPIECE IS ALWAYS A PURE MASTERPIECE 🌹";
 
     if (validatedPassphrase === correctPassphrase) {
         return { success: true, error: null };
@@ -110,5 +112,16 @@ export async function updateUserRoleAction(data: {targetUserId: string, role: 'f
   } catch (error: any) {
     console.error('Role update failed:', error);
     return { success: false, error: error.message || 'An unexpected server error occurred.' };
+  }
+}
+
+export async function getEnvContentAction(): Promise<string | null> {
+  try {
+    const filePath = path.join(process.cwd(), '.env.example');
+    const content = await fs.readFile(filePath, 'utf-8');
+    return content;
+  } catch (error) {
+    console.error("Failed to read .env.example file:", error);
+    return null;
   }
 }
