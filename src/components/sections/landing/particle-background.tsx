@@ -18,15 +18,23 @@ const ParticleBackground: React.FC = () => {
     let animationFrameId: number;
     let particles: Particle[] = [];
     const particleCount = 150;
-    const mouse = {
-        x: mousePosition.x,
-        y: mousePosition.y,
+    
+    let mouse = {
+        x: 0,
+        y: 0,
         radius: 100
+    }
+
+    if(typeof window !== 'undefined') {
+        mouse.x = mousePosition.x;
+        mouse.y = mousePosition.y;
     }
     
     const resizeCanvas = () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        if(typeof window !== 'undefined') {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
     }
 
     class Particle {
@@ -51,6 +59,7 @@ const ParticleBackground: React.FC = () => {
       }
 
       update() {
+        if(typeof window === 'undefined') return;
         // Mouse interaction
         let dx = mouse.x - this.x;
         let dy = mouse.y - this.y;
@@ -105,8 +114,8 @@ const ParticleBackground: React.FC = () => {
                 if (distance < 100) {
                     opacityValue = 1 - (distance/100);
                     if (!ctx) return;
-                    ctx.strokeStyle = `hsla(${getComputedStyle(document.documentElement).getPropertyValue('--primary')}, ${opacityValue})`;
-                    ctx.lineWidth = 0.2;
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${opacityValue * 0.2})`;
+                    ctx.lineWidth = 1;
                     ctx.beginPath();
                     ctx.moveTo(particles[a].x, particles[a].y);
                     ctx.lineTo(particles[b].x, particles[b].y);
@@ -142,6 +151,11 @@ const ParticleBackground: React.FC = () => {
       window.removeEventListener('resize', handleResize);
     };
   }, [mousePosition]); // Rerun effect if mousePosition object changes
+
+  useEffect(() => {
+    mouse.x = mousePosition.x;
+    mouse.y = mousePosition.y;
+  },[mousePosition])
 
   useEffect(() => {
     // This is just to ensure the canvas is resized on initial load after hydration
