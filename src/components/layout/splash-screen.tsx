@@ -19,15 +19,10 @@ export default function SplashScreen({ onAnimationComplete }: { onAnimationCompl
     // Attempt to play and unmute the video
     if (videoRef.current) {
       videoRef.current.play().catch(error => {
-        // Autoplay was prevented.
-        console.error("Video autoplay was prevented:", error);
+        // Autoplay was prevented. This is common.
+        // We will rely on the onCanPlay event to try again.
+        console.error("Video autoplay was initially prevented:", error);
       });
-      // Unmute after a very short delay
-      setTimeout(() => {
-        if(videoRef.current) {
-          videoRef.current.muted = false;
-        }
-      }, 100);
     }
 
     return () => {
@@ -44,6 +39,13 @@ export default function SplashScreen({ onAnimationComplete }: { onAnimationCompl
           return () => clearTimeout(animationEndTimer);
       }
   }, [shouldAnimateOut, onAnimationComplete]);
+  
+  const handleCanPlay = () => {
+    if (videoRef.current) {
+        videoRef.current.muted = false;
+        videoRef.current.play();
+    }
+  }
 
   return (
     <div
@@ -60,9 +62,10 @@ export default function SplashScreen({ onAnimationComplete }: { onAnimationCompl
         src="/video.mp4"
         autoPlay
         playsInline
-        muted // Start muted to allow autoplay
+        muted // Start muted to allow autoplay, then unmute programmatically
         className="absolute top-0 left-0 w-full h-full object-cover"
         onEnded={() => setShouldAnimateOut(true)}
+        onCanPlay={handleCanPlay}
        />
        {/* The overlay provides a nice vignette effect */}
        <div className="absolute inset-0 bg-black/30" />
