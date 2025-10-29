@@ -14,6 +14,7 @@ import { ICONS } from '@/lib/projects-data';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import ParticleBackground from './particle-background';
+import EmityGateLogo from '@/components/icons/emity-gate-logo';
 
 const Hero = () => {
   const position = useMousePosition();
@@ -37,6 +38,9 @@ const Hero = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const sunProject = projectsData?.find(p => p.id === 'emity-gate-core');
+  const orbitingProjects = projectsData?.filter(p => p.id !== 'emity-gate-core');
+
   return (
     <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
       <ParticleBackground />
@@ -55,7 +59,7 @@ const Hero = () => {
                 </filter>
             </defs>
             <g transform="translate(500, 500)">
-                {projectsData?.map((p) => (
+                {orbitingProjects?.map((p) => (
                      <circle
                         key={`orbit-${p.id}`}
                         cx="0"
@@ -73,20 +77,36 @@ const Hero = () => {
 
         {/* Central Core / Sun */}
         <div className="z-10">
-           <div className={cn(
-              "w-48 h-48 bg-purple-500/30 rounded-full flex items-center justify-center animate-pulse-glow"
-            )}>
-          </div>
+          {sunProject && (
+            <div
+              className={cn(
+                "w-48 h-48 rounded-full flex items-center justify-center relative overflow-hidden"
+              )}
+               style={{
+                  backgroundColor: sunProject.color,
+                  boxShadow: `0 0 ${sunProject.glowIntensity! * 5}px ${sunProject.color}, 0 0 ${sunProject.glowIntensity! * 10}px ${sunProject.color}80, inset 0 0 10px rgba(255,255,255,0.3)`,
+                  animation: `pulse-glow ${12 - sunProject.glowIntensity!}s infinite ease-in-out`
+               }}
+            >
+              {sunProject.iconImage ? (
+                <Image src={sunProject.iconImage} alt={sunProject.name} layout="fill" objectFit="cover" className="rounded-full" />
+              ) : (
+                <EmityGateLogo className="text-4xl" />
+              )}
+            </div>
+          )}
         </div>
+
 
         {projectsLoading && <Loader2 className="absolute w-16 h-16 text-primary animate-spin" />}
 
         {/* Orbiting Planets */}
-        {projectsData?.map((p) => {
+        {orbitingProjects?.map((p) => {
           const angle = p.angle + time * p.speed;
           const x = Math.cos(angle * Math.PI / 180) * p.orbit;
           const y = Math.sin(angle * Math.PI / 180) * p.orbit;
           const Icon = ICONS[p.icon] || ICONS['Link'];
+          const glow = p.glowIntensity || 5;
 
           return (
             <Link
@@ -105,7 +125,7 @@ const Hero = () => {
                   width: p.size,
                   height: p.size,
                   backgroundColor: p.color,
-                  boxShadow: `0 0 20px ${p.color}, 0 0 40px ${p.color}80, inset 0 0 10px rgba(255,255,255,0.3)`,
+                  boxShadow: `0 0 ${glow * 2}px ${p.color}, 0 0 ${glow * 4}px ${p.color}80, inset 0 0 ${glow}px rgba(255,255,255,0.3)`,
                 }}
               >
                 {p.iconImage ? (

@@ -29,6 +29,7 @@ export type Project = {
   url: string;
   tier: OrbitalTier,
   sizePreset: SizePreset,
+  glowIntensity?: number;
   // Orbit props
   size: number;
   orbit: number;
@@ -40,6 +41,17 @@ type ProjectSeed = Omit<Project, 'size' | 'orbit' | 'angle' | 'speed'>;
 
 const projectSeeds: ProjectSeed[] = [
   {
+    id: 'emity-gate-core',
+    name: 'EmityGate Core',
+    description: 'The central star of the empire, representing the core brand and vision.',
+    icon: 'Atom',
+    color: 'hsl(260, 100%, 75%)',
+    url: '#',
+    tier: 'core',
+    sizePreset: 'extra-large',
+    glowIntensity: 10,
+  },
+  {
     id: 'zenix',
     name: 'Zenix',
     description: 'Zenix AI Photo & Art Studio: Revolutionizing digital creativity with generative AI, enabling users to produce stunning, unique visual content from simple text prompts.',
@@ -48,6 +60,7 @@ const projectSeeds: ProjectSeed[] = [
     url: '#',
     tier: 'inner',
     sizePreset: 'medium',
+    glowIntensity: 5,
   },
   {
     id: 'notesgate',
@@ -58,6 +71,7 @@ const projectSeeds: ProjectSeed[] = [
     url: '#',
     tier: 'inner',
     sizePreset: 'large',
+    glowIntensity: 5,
   },
   {
     id: 'ledgate',
@@ -68,6 +82,7 @@ const projectSeeds: ProjectSeed[] = [
     url: '#',
     tier: 'outer',
     sizePreset: 'small',
+    glowIntensity: 3,
   },
   {
     id: 'mindmate',
@@ -78,6 +93,7 @@ const projectSeeds: ProjectSeed[] = [
     url: '#',
     tier: 'outer',
     sizePreset: 'large',
+    glowIntensity: 5,
   },
   {
     id: 'playgate',
@@ -88,6 +104,7 @@ const projectSeeds: ProjectSeed[] = [
     url: '#',
     tier: 'core',
     sizePreset: 'medium',
+    glowIntensity: 7,
   },
 ];
 
