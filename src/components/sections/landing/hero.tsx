@@ -143,7 +143,10 @@ const Hero = () => {
 
       {/* Foreground Text */}
       <div style={parallax(-0.02)} className="absolute inset-0 z-30 flex flex-col items-center justify-center text-center pointer-events-none">
-        <h1 className="font-headline text-8xl md:text-9xl tracking-widest">
+        <h1 
+          className="font-headline text-8xl md:text-9xl tracking-widest"
+          style={{ textShadow: '0px 0px 10px rgba(0, 0, 0, 0.7)' }}
+        >
             <span className="font-bold text-white">EMITY</span>
             <span className="font-light text-primary">GATE</span>
         </h1>
